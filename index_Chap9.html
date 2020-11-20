@@ -101,8 +101,8 @@
 			})
 		</script>
 
-		<h1> throught scaleBand column chart + paddingOuter + rangeRound + tragger + transition</h1>
-		<p> trigger practice, click this line to update</p>
+		<h1> throught scaleBand column chart + paddingOuter + rangeRound + tragger + transition + dynamic maxrange</h1>
+		<p> trigger practice, click this line to update dynamically</p>
 		</script>
 		<script type="text/javascript">
 			// create dataSet
@@ -165,13 +165,30 @@
 				return h - yScale(d);
 			})
 			.attr("opacity",1);// former opacity in text
+			
+			// prepare for the next
+			console.log(dataSet.length);
+			var orgDataPoint = dataSet.length; //Count original length of dataset
+
 
 			// trigger = click to update
 			d3.select("p")
 				.on("click", function(){
+					//console.log(dataSet.length);//不可用
 					//alert(" correct! click finish!")
 					// update dataset
-					dataSet = [ 11, 12, 11, 12, 11, 12, 11, 12, 11, 12, 5,10,13,19,21,25,22,18,15,13];
+					// dataSet = [ 11, 12, 11, 12, 11, 12, 11, 12, 11, 12, 5,10,13,19,21,25,22,18,15,13];
+					// update dynamic dataset
+					var maxValue = 25;
+					
+					var dataSet = [];
+					for (var i = 0; i < orgDataPoint; i++){
+						dynamicNum = Math.floor(Math.random() * maxValue)
+						dataSet.push(dynamicNum);
+					}
+
+					//update scale
+					yScale.domain([0,d3.max(dataSet)]);
 					// update rect
 					svg.selectAll("rect")
 						.data(dataSet)
@@ -180,7 +197,7 @@
 						//.append("rect")
 
 						.transition()
-						.duration(1000)
+						.duration(500)
 						.ease(d3.easeLinear)
 						//.attr("opacity",0.8)
 
@@ -203,9 +220,9 @@
 
 						.transition()
 						.delay(function(d,i){
-							return i/dataSet.length * 100;
+							return i/dataSet.length * 500;
 						})
-						.duration(1000)
+						.duration(500)
 						.ease(d3.easeLinear)
 						
 						//.attr("opacity",0.1)// test 前后 opacity
@@ -220,9 +237,35 @@
 							return h - yScale(d) ;
 						})
 
-
-
 				})
+		</script>
+
+		<h1> scatter chart(from chap8) + dynamic maxrange</h1>
+		<p> trigger practice, click this line to update dynamically</p>
+		<script type="text/javascript">
+			// window default
+			var w = 500;
+			var h = 300;
+
+			var paddingIn = 2;
+			var paddingInRatio = 0.1
+
+			dataPointLength = 50;
+			maxRange = Math.floor(Math.random() * 1000);
+			// create dataset
+			var dataSet = [];
+			for (var i = 0; i < dataPointLength; i++) {
+				var newNum1 = Math.floor(Math.random() * maxRange);
+				var newNum2 = Math.floor(Math.random() * maxRange);
+				dataSet.push([newNum1, newNum2]);
+			}
+			// define scale
+			var xScale = d3.scaleLinear()
+							.domain([0, d3.max(dataSet, function(d){
+								return dataSet[0];
+							})])
+							.range([0,w])
+
 		</script>
 	</body>
 
