@@ -102,7 +102,7 @@
 		</script>
 
 		<h1> throught scaleBand column chart + paddingOuter + rangeRound + tragger + transition + dynamic maxrange</h1>
-		<p> trigger practice, click this line to update dynamically</p>
+		<p > trigger practice, click this line to update dynamically</p>
 		</script>
 		<script type="text/javascript">
 			// create dataSet
@@ -241,14 +241,15 @@
 		</script>
 
 		<h1> scatter chart(from chap8) + dynamic maxrange</h1>
-		<p> trigger practice, click this line to update dynamically</p>
+		<p id = p-scatter> trigger practice, click this line to update dynamically</p>
 		<script type="text/javascript">
 			// window default
 			var w = 500;
 			var h = 300;
 
 			var paddingIn = 2;
-			var paddingInRatio = 0.1
+			var paddingInRatio = 0.1;
+			var paddingAxis = 30;
 
 			dataPointLength = 50;
 			maxRange = Math.floor(Math.random() * 1000);
@@ -259,13 +260,128 @@
 				var newNum2 = Math.floor(Math.random() * maxRange);
 				dataSet.push([newNum1, newNum2]);
 			}
+			console.log(dataSet.length);
 			// define scale
 			var xScale = d3.scaleLinear()
+							.domain([0, d3.max(dataSet, function(d) { return d[0]})])
+							.range([paddingAxis, w - paddingAxis]);
+			var yScale = d3.scaleLinear()
+							.domain([0, d3.max(dataSet, function(d){  return d[1]})])
+							.range([h - paddingAxis, paddingAxis]);
+			var rScale = d3.scaleSqrt() //不是linear
 							.domain([0, d3.max(dataSet, function(d){
-								return dataSet[0];
+								return d[1] //不要加；，用d指代不是dataSet
 							})])
-							.range([0,w])
+							.range([1, h/25]);
+			// define axis
+			var xAxis = d3.axisBottom()
+							.scale(xScale)
+			var yAxis = d3.axisLeft()
+							.scale(yScale)
 
+			// SVG
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+				// add circle to SVG
+				svg.selectAll("circle")
+					.data(dataSet)
+					.enter()
+					.append("circle")
+					.attr("cx", function(d){
+						return xScale(d[0]);
+					})
+					.attr("cy", function(d){
+						return yScale(d[1]);
+					})
+					.attr("r", function(d){
+						return rScale(d[1]);
+					})
+					.attr("fill", "teal")
+				// add label to SVG
+				svg.selectAll("text")
+					.data(dataSet)
+					.enter()
+					.append("text")
+					.text(function(d){
+						return d[0] + "/" + d[1]
+					})
+					.attr("x", function(d){
+						return xScale(d[0]);
+					})
+					.attr("y", function(d){
+						return yScale(d[1]) - 10;
+					})
+					.attr("fill", "teal")
+					.attr("font-size",5)
+				// add axis to SVG
+				svg.append("g")
+					.attr("class", "xAxisStyle")
+					.call(xAxis)
+					.attr("transform", "translate(0," + (h-paddingAxis) + ")")
+
+				svg.append("g")
+					.attr("class", "yAxisStyle")
+					.call(yAxis)
+					.attr("transform", "translate(" + paddingAxis + ",0)")
+			// click to update SVG
+			d3.select("#p-scatter") //id-# //div better 
+				.on("click", function(){
+					//console.log("test")
+					//alert(" !!!")
+					var dataSet = [];
+					for (var i = 0; i < dataPointLength; i++) {
+						var newNum1 = Math.floor(Math.random() * maxRange);
+						var newNum2 = Math.floor(Math.random() * maxRange);
+						dataSet.push([newNum1, newNum2]);
+					}
+					xScale.domain([0,d3.max(dataSet, function(d){ return d[0]})]);
+					yScale.domain([0,d3.max(dataSet, function(d){ return d[1]})]);
+					rScale.domain([0,d3.max(dataSet, function(d){ return d[1]})]);
+
+					xAxis.scale(xScale)
+					yAxis.scale(yScale)
+
+					svg.selectAll("circle")
+						.data(dataSet)
+						.transition()
+						.duration(1500)
+						.attr("cx", function(d){
+							return xScale(d[0])
+						})
+						.attr("cy", function(d){
+							return yScale(d[1])
+						})
+						.attr("r", function(d){
+							return rScale(d[1])
+					})
+					svg.selectAll("text")
+						.data(dataSet)
+						.transition()
+						.duration(1000)
+						.text(function(d){
+							return d[0] + "/" + d[1]
+						})
+						.attr("x", function(d){
+							return xScale(d[0]);
+						})
+						.attr("y", function(d){
+							return yScale(d[1]) - 10;
+						})
+
+					svg.select(".xAxisStyle")// class-.
+						.transition()
+						.duration(1000)
+						//.ease(d3.bounceOut(0.3))
+						//.easeBounce(0.3)
+						.ease(d3.easeBounceOut)
+						.call(xAxis)
+					svg.select(".yAxisStyle")// class-.
+						.call(yAxis)
+
+
+				})
 		</script>
 	</body>
 
