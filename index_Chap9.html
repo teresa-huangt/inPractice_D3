@@ -101,8 +101,8 @@
 			})
 		</script>
 
-		<h1> throught scaleBand column chart + paddingOuter + rangeRound + tragger + transition + dynamic maxrange</h1>
-		<p > trigger practice, click this line to update dynamically</p>
+		<h1> (close next chart) throught scaleBand column chart + paddingOuter + rangeRound + tragger + transition + dynamic maxrange  + </h1>
+		<p id = "dynmicBar"> trigger practice, click this line to update dynamically</p>
 		</script>
 		<script type="text/javascript">
 			// create dataSet
@@ -172,8 +172,9 @@
 
 
 			// trigger = click to update
-			d3.select("p")
+			d3.select("#dynmicBar")
 				.on("click", function(){
+					//alert("click finished")
 					//console.log(dataSet.length);//不可用
 					//alert(" correct! click finish!")
 					// update dataset
@@ -183,31 +184,28 @@
 					
 					var dataSet = [];
 					for (var i = 0; i < orgDataPoint; i++){
-						dynamicNum = Math.floor(Math.random() * maxValue)
-						dataSet.push(dynamicNum);
+						var newNum = Math.floor(Math.random() * maxValue)
+						dataSet.push(newNum);
 					}
-
+					console.log("dataSet")
 					//update scale
 					yScale.domain([0,d3.max(dataSet)]);
-					// update rect
+					// update rect  
 					svg.selectAll("rect")
 						.data(dataSet)
-						//!注意这里没有enter和append
-						//.enter()
-						//.append("rect")
-
+						//!注意这里无需重复enter和append，除非另加数字
 						.transition()
 						.duration(500)
 						.ease(d3.easeLinear)
 						//.attr("opacity",0.8)
-
-
 						.attr("y", function(d){
 							return h - yScale(d);
 						})
+
 						.attr("height", function(d){
 							return yScale(d);
 						})
+	
 						//update color
 						.attr("fill", function(d){
 							return "rgb(" + Math.random()*255 + "," + Math.random()*255 + "," + Math.random()*255 + ")"
@@ -241,7 +239,8 @@
 		</script>
 
 		<h1> scatter chart(from chap8) + dynamic maxrange</h1>
-		<p id = p-scatter> trigger practice, click this line to update dynamically</p>
+		<p id = p-scatter> trigger practice, click this line to update dynamically; on-end transtion chain; clipping path </p>
+		<div>
 		<script type="text/javascript">
 			// window default
 			var w = 500;
@@ -284,8 +283,21 @@
 						.append("svg")
 						.attr("width", w)
 						.attr("height", h)
+				// define clip-path
+				svg.append("clipPath")
+					.attr("id", "chartMask")
+					.append("rect")
+					.attr("x", paddingAxis)
+					.attr("y", paddingAxis)
+					.attr("width", w - paddingAxis*2)
+					.attr("height", h - paddingAxis*2)
+					console.log("define clippath finish");
+
 				// add circle to SVG
-				svg.selectAll("circle")
+				svg.append("g") //g not p
+					.attr("id", "circle")
+					.attr("clip-path", "url(#chartMask)") // in url()
+					.selectAll("circle")// add g+clippath before this
 					.data(dataSet)
 					.enter()
 					.append("circle")
@@ -300,7 +312,10 @@
 					})
 					.attr("fill", "teal")
 				// add label to SVG
-				svg.selectAll("text")
+				svg.append("g")
+					.attr("id", "label")
+					.attr("clip-path", "url(#chartMask)")
+					.selectAll("text")
 					.data(dataSet)
 					.enter()
 					.append("text")
@@ -347,6 +362,14 @@
 						.data(dataSet)
 						.transition()
 						.duration(1500)
+
+						.on("start", function(){
+							d3.select(this)
+								//.transition() // forbidden
+								//.duration(1000) //forbidden
+								.attr("fill", "#e26a6a")
+						})
+
 						.attr("cx", function(d){
 							return xScale(d[0])
 						})
@@ -355,11 +378,18 @@
 						})
 						.attr("r", function(d){
 							return rScale(d[1])
+						})
+
+						.on("end", function(){
+							d3.select(this)
+								.transition()
+								.duration(1000)
+								.attr("fill", " #765d69")
 					})
 					svg.selectAll("text")
 						.data(dataSet)
 						.transition()
-						.duration(1000)
+						.duration(100)
 						.text(function(d){
 							return d[0] + "/" + d[1]
 						})
@@ -379,10 +409,9 @@
 						.call(xAxis)
 					svg.select(".yAxisStyle")// class-.
 						.call(yAxis)
-
-
 				})
 		</script>
+		</div>
 	</body>
 
 
