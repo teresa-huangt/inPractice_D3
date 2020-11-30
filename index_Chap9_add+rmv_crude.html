@@ -230,7 +230,7 @@
 					// update rect 
 						//modify: add var bar = 
 					var bar2 = svg.selectAll("rect")
-						.data(dataSet.key)
+						.data(dataSet, key) //这里是逗号！不是.
 
 						bar2.enter()
 							.append("rect")
@@ -263,23 +263,23 @@
 							return "rgb(" + Math.random()*255 + "," + Math.random()*255 + "," + Math.random()*255 + ")"
 						})
 
-					// // update text
-					// var barLabel = svg.selectAll("text")
-					// 	.data(dataSet.key)
+					// update text
+					var barLabel = svg.selectAll("text")
+						.data(dataSet, key)
 						
-					// barLabel //如果不添加 上面左赋值要继续（未完成）但却遇到调用自己
-					// 	.enter()
-					// 	.append("text")
-					// 	.text(function(d){ return d.value})
-					// 	.attr("x", w) //如果同上只有w，就所有都加在最后
-					// 	.attr("y", function(d) {return h - yScale(d.value)})
-					// 	.merge(barLabel)
+					barLabel //如果不添加 上面左赋值要继续（未完成）但却遇到调用自己
+						.enter()
+						.append("text")
+						.text(function(d){ return d.value})
+						.attr("x", w) //如果同上只有w，就所有都加在最后
+						.attr("y", function(d) {return h - yScale(d.value)})
+						.merge(barLabel)
 
-					// 	.transition()
-					// 	.duration(500)
-					// 	.attr("x", function(d,i){
-					// 		return xScale(i)
-					// 	})
+						.transition()
+						.duration(500)
+						.attr("x", function(d,i){
+							return xScale(i)
+						})
 
 
 
