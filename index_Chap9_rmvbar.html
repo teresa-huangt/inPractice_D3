@@ -10,7 +10,7 @@
 	<body>
 
 		<h1> add one bar after one click </h1>
-		<p id = "addBar"> click this line ; add bar correct; ? add label wrong ?</p>
+		<p id = "rmvBar"> click this to remove one bar</p>
 		
 		<script type="text/javascript">
 			// create dataSet
@@ -88,16 +88,15 @@
 
 
 			// trigger = click to update
-			d3.select("#addBar")
+			d3.select("#rmvBar")
 				.on("click", function(){
-					// modify: create one new number
-					var maxValue = 25;
-					var newNum = Math.floor(Math.random() * maxValue)
-					dataSet.push(newNum);
-					
-					
+
+					dataSet.shift();
+					//dataSet.pop();
+						
 					//update scale
 					xScale.domain(d3.range(dataSet.length));// no [0,]
+					console.log(dataSet.length);
 					yScale.domain([0,d3.max(dataSet)]);
 
 					// update rect 
@@ -139,43 +138,48 @@
 							return yScale(d);
 						})
 	
-						//update color
-						.attr("fill", function(d){
-							return "rgb(" + Math.random()*255 + "," + Math.random()*255 + "," + Math.random()*255 + ")"
-						})
+						// //update color
+						// .attr("fill", function(d){
+						// 	return "rgb(" + Math.random()*255 + "," + Math.random()*255 + "," + Math.random()*255 + ")"
+						// })
+					bar.exit()
+						.transition()
+						.duration(2500)
+						.attr("x",w)
+						//.remove()
 
 					// update text
 					var barLabel = svg.selectAll("text")
 						.data(dataSet)
-						
-					barLabel //如果不添加 上面左赋值要继续（未完成）但却遇到调用自己
-						.enter()
-						.append("text")
-						.text(function(d){ return d})
-						.attr("x", w) //如果同上只有w，就所有都加在最后
-						.attr("y", function(d) {return h - yScale(d)})
-						.merge(barLabel)
 
+						barLabel.enter()
+								.append("text")
+						
+								//.text(function(d){ return d})
+								//.attr("x", 2) //这里不加label也随着bar移动
+								//.attr("y", function(d) {return h - yScale(d)})
+								.merge(barLabel)
+
+								.transition()
+								.duration(2500)
+								.attr("x", function(d,i){
+										return xScale(i);
+									})
+
+								.attr("y", function(d){
+									return h - yScale(d) +10;
+								})
+
+
+					barLabel.exit()
 						.transition()
-						// .delay(function(d,i){
-						// 	return i/dataSet.length * 500;
-						// })
-						.duration(500)
-						//.ease(d3.easeLinear)
-						
-						//.attr("opacity",0.1)// test 前后 opacity
+						.duration(2500)
+						.attr("x",w)
 
-						// .text(function(d){
-						// 	return d
-						// })
-						.attr("x", function(d,i){
-							return xScale(i)
-						})
-						// .attr("y", function(d,i){
-						// 	return h - yScale(d)
-						// })
 
-				})
+
+
+		})	
 		</script>
 
 		

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title> chapter9 </title>
+		<script type="text/javascript" src="./d3.js"></script>
+
+	</head>
+
+	<body>
+
+		<h1> add one bar after one click </h1>
+		<p id = "addBar"> click this line ; add bar correct; add label wrong = answer line151</p>
+		
+		<script type="text/javascript">
+			// create dataSet
+			var dataSet = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13, 11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+			// window parameters
+			var w = 500;
+			var h = 300;
+			var paddingIn = 1;
+			var paddingOut = 10;
+			var staticNum = 2;
+			// scale bar width and height 
+			var xScale = d3.scaleBand()
+							.domain(d3.range(dataSet.length))
+							.rangeRound([0, w])
+							.paddingInner(0.5)
+							.paddingOuter(1)
+
+
+			var yScale = d3.scaleLinear()
+							.domain([0, d3.max(dataSet)])
+							.range([0, h])
+			// SVG
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+						.attr("style","background: #765d69; padding: 30px")
+			svg.selectAll("rect")
+				.data(dataSet)
+				.enter()
+				.append("rect")
+				.attr("x", function(d,i){
+					return xScale(i);
+				})
+				.attr("y", function(d,i){
+					return h - yScale(d);
+				})
+				.attr("width", function(d,i){
+					return xScale.bandwidth(); //!
+				})
+				.attr("height", function(d,i){
+					return yScale(d);
+				})
+				.attr("fill", function(d,i){
+					return "rgb(0,0," + Math.random()*255  +")"
+				})// 没加d，i也可以
+				
+				.attr("opacity",1);// former opacity in rect
+
+			svg.selectAll("text")
+			.data(dataSet)
+			.enter()
+			.append("text")
+			.text(function(d,i) {
+				return d
+			})
+			.attr("x", function(d,i){
+				return xScale(i);
+			})
+			.attr("y", function(d,i){
+				return h - yScale(d) + 10;
+			})
+			.attr("font-family", "sans-serif") //这里不加；，否则后面停止运行
+			.attr("fill", "white")
+			.attr("font-size", "10px")
+			
+
+			//.attr("opacity",1);// former opacity in text
+
+
+			
+			// prepare for the next
+			console.log(dataSet.length);
+			var orgDataPoint = dataSet.length; //Count original length of dataset
+
+
+			// trigger = click to update
+			d3.select("#addBar")
+				.on("click", function(){
+					// modify: create one new number
+					var maxValue = 25;
+					var newNum = Math.floor(Math.random() * maxValue)
+					dataSet.push(newNum);
+					
+					
+					//update scale
+					xScale.domain(d3.range(dataSet.length));// no [0,]
+					yScale.domain([0,d3.max(dataSet)]);
+
+					// update rect 
+						//modify: add var bar = 
+					var bar = svg.selectAll("rect")
+						.data(dataSet)
+						//!注意这里无需重复enter和append，除非另加数字
+						// add new
+						bar.enter()
+							.append("rect")
+							.attr("x", w)
+							.attr("y", function(d) { return h - yScale(d)})
+							.attr("width", xScale.bandwidth())
+							.attr("height", function(d) { return yScale(d)})
+							.attr("fill", function(d){
+								return "rgb(" + Math.random()*255 + "," + Math.random()*255 + "," + Math.random()*255 + ")"
+							})
+							.merge(bar)
+						// add new finish
+
+						.transition()
+						.duration(500)
+						//.ease(d3.easeLinear)
+						//.attr("opacity",0.8)
+							// add new
+						.attr("x", function(d,i){
+								return xScale(i);
+							})
+							// add new finish
+
+						.attr("y", function(d){
+							return h - yScale(d);
+						})
+							//add new
+							.attr("width", xScale.bandwidth())
+							//add new finish
+
+						.attr("height", function(d){
+							return yScale(d);
+						})
+	
+						//update color
+						.attr("fill", function(d){
+							return "rgb(" + Math.random()*255 + "," + Math.random()*255 + "," + Math.random()*255 + ")"
+						})
+
+					// update text
+					var barLabel = svg.selectAll("text")
+						.data(dataSet)
+						
+					barLabel //如果不添加 上面左赋值要继续（未完成）但却遇到调用自己
+						.enter()
+						.append("text")
+						.text(function(d){ return d})
+						.attr("x", w) //如果同上只有w，就所有都加在最后
+						.attr("y", function(d) {return h - yScale(d)})
+						.merge(barLabel)
+
+						.transition()
+						// .delay(function(d,i){
+						// 	return i/dataSet.length * 500;
+						// })
+						.duration(500)
+						//.ease(d3.easeLinear)
+						
+						//.attr("opacity",0.1)// test 前后 opacity
+
+						// .text(function(d){
+						// 	return d
+						// })
+						.attr("x", function(d,i){
+							return xScale(i)
+						})
+						// .attr("y", function(d,i){
+						// 	return h - yScale(d)
+						// })
+
+				})
+		</script>
+
+		
+	</body>
+
+
+
+
+</html>
