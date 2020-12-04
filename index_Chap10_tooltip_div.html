@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+	<!--html-head -->
+	<head>
+		<meta charset="utf-8">
+		<title> chapter10 </title>
+		<script type="text/javascript" src="./d3.js"></script>
+		<style type="text/css">
+			#tooltip{
+				position:absolute;
+				width:50px;
+				height:auto;
+				padding: 10px;
+				background-color: white;
+
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4); 
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4); 
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+
+				pointer-events: none;
+			}
+
+			#tooltip.hidden {
+				display: none; 
+			}
+
+
+
+
+		</style>
+	</head>
+	<!--html-body -->
+	<body>
+		<h1>tooltip in div</h1>
+		<div id = "tooltip" class = "hidden">
+			<p> label label label is</p>
+			<p><span id = "value">100</span>%</p>
+
+		</div>
+		<!--d3js -->
+		<script type="text/javascript">
+		// default parameters
+		var w = 600;
+		var h = 300;
+
+		var dataSet = [
+		5,
+		10,
+		13,
+		19,
+		21,
+		25,
+		22,
+		18,
+		15,
+		13,
+		11,12,15,20,18,17,16,18,23,25];
+
+		var xScale = d3.scaleBand()
+						.domain(d3.range(dataSet.length))
+						.rangeRound([0, w])
+						.paddingInner(-0.5);
+		var yScale = d3.scaleLinear()
+						.domain([0, d3.max(dataSet)])
+						.range([0,h]);
+		// define SVG
+		var svg = d3.select("body")
+					.append("svg")
+					.attr("width", w)
+					.attr("height", h)
+		// SVG's bar
+		var bar = svg.selectAll("rect")
+					.data(dataSet)
+					.enter()
+					.append("rect")
+					.attr("x", function(d, i){
+						return xScale(i)
+					})
+					.attr("y", function(d, i){
+						return h - yScale(d)
+					})
+					.attr("width", function(d, i){
+						return xScale.bandwidth()
+					})
+					.attr("height", function(d, i){
+						return yScale(d)
+					})
+					.attr("fill", "teal")
+					.attr("opacity",0.7)
+					// here is the event
+					.on("click", function(d, i){
+						console.log(i + "key:value" + d) 
+					})
+					// hover in d3
+					.on("mouseover", function(d){ //d最好时刻加上 避免增补时需要
+						d3.select(this)
+							//.transition()
+							//.duration(2500)
+							.attr("fill", "green")
+						// get mouse position xy
+							var xPos = parseFloat(d3.select(this).attr("x"))
+							var yPos = parseFloat(d3.select(this).attr("y"))
+
+						// show tooltip using div
+						d3.select("#tooltip")
+							.style("left", xPos + "px")
+							.style("top", yPos + "px")
+
+						d3.select("#value")
+							.text(d)
+
+						d3.select("#tooltip").classed("hidden", false) //之前是display：none
+
+					})
+					.on("mouseout", function(){
+						d3.select(this)
+							.transition()
+							.duration(250)
+							.attr("fill", "teal")
+
+							d3.select("tooltip").classed("hidden", true)//之前是display：none
+					})
+					//sort column bar chart
+					// .on("click", function(){
+					// 	sortBaras()
+					// })
+
+					// //add tooltip default
+					// .append("title")
+					// .text(function(d){
+					// 	return "value:" + d
+					// })
+
+
+		// SVG's label
+		var barLabel = svg.selectAll("text")
+						.data(dataSet)
+						.enter()
+						.append("text")
+						.text(function(d){
+							return d
+						})
+						.attr("x", function(d, i){
+							return xScale(i) + 10;
+						})
+						.attr("y", function(d, i){
+							return h - yScale(d) + 12
+						})
+						.attr("fill", "blue")
+						// another way to ignore label
+						.style("pointer-events", "none")
+
+
+
+		var sortBaras = function(){
+
+			svg.selectAll("rect")
+				.sort(function(a, b){
+						return d3.ascending(a, b)
+					})
+				.transition("sortBaras")
+				.duration(2000)
+				.attr("x", function(d, i){
+					return xScale(i)
+				})
+
+			svg.selectAll("text")
+				.sort(function(a, b){
+						return d3.ascending(a, b)
+					})
+				.transition("sortBaras")
+				.duration(1000)
+				.attr("x", function(d, i){
+					return xScale(i)
+				})
+
+			}
+
+
+		</script>
+	</body>
+</html>

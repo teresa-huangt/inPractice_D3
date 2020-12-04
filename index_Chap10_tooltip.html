@@ -66,67 +66,84 @@
 					.append("svg")
 					.attr("width", w)
 					.attr("height", h)
-		// define group and insert rect and label
-		var groups = svg.selectAll("g")
+		// SVG's bar
+		var bar = svg.selectAll("rect")
+					.data(dataSet)
+					.enter()
+					.append("rect")
+					.attr("x", function(d, i){
+						return xScale(i)
+					})
+					.attr("y", function(d, i){
+						return h - yScale(d)
+					})
+					.attr("width", function(d, i){
+						return xScale.bandwidth()
+					})
+					.attr("height", function(d, i){
+						return yScale(d)
+					})
+					.attr("fill", "teal")
+					.attr("opacity",0.7)
+					// here is the event
+					.on("click", function(d, i){
+						console.log(i + "key:value" + d) 
+					})
+					// hover in d3
+					.on("mouseover", function(d){ //d最好时刻加上 避免增补时需要
+						d3.select(this)
+							//.transition()
+							//.duration(2500)
+							.attr("fill", "green")
+						// get mouse position xy
+							var xPos = parseFloat(d3.select(this).attr("x"))
+							var yPos = parseFloat(d3.select(this).attr("y"))
+
+						// add tooltip in SVG
+							svg.append("text") //前面加svg
+							.attr("id", "tooltip")
+							.text("valuevaluebalue:" + d)//注意这里没用function d//maxvalue超出
+							.attr("x", xPos)
+							.attr("y", yPos)
+							.attr("font-size", 10)
+					})
+					.on("mouseout", function(){
+						d3.select(this)
+							.transition()
+							.duration(250)
+							.attr("fill", "teal")
+
+						d3.select("#tooltip")
+							.remove()
+					})
+					//sort column bar chart
+					.on("click", function(){
+						sortBaras()
+					})
+					// //add tooltip default
+					// .append("title")
+					// .text(function(d){
+					// 	return "value:" + d
+					// })
+
+
+		// SVG's label
+		var barLabel = svg.selectAll("text")
 						.data(dataSet)
 						.enter()
-						.append("g")
-						// insert rect
-		var rects = groups.append("rect")
-						.attr("x", function(d, i){
-							return xScale(i)
-						})
-						.attr("y", function(d, i){
-							return h - yScale(d)
-						})
-						.attr("width", function(d, i){
-							return xScale.bandwidth()
-						})
-						.attr("height", function(d, i){
-							return yScale(d)
-						})
-						.attr("fill", "teal")
-						.attr("opacity",0.7)
-							
-			
-						.on("mouseover", function(){
-							d3.select(this)
-								//.transition()
-								//.duration(2500)
-						.attr("fill", "green")
-						})
-						.on("mouseout", function(){
-							d3.select(this)
-								.transition()
-								.duration(250)
-								.attr("fill", "teal")
-						})
-						//sort column bar chart
-						.on("click", function(){
-							sortBaras()
-						})
-
-						// insert label
-		var labels = groups.append("text")
+						.append("text")
 						.text(function(d){
 							return d
 						})
 						.attr("x", function(d, i){
-							return xScale(i);
+							return xScale(i) + 10;
 						})
 						.attr("y", function(d, i){
-							return h - yScale(d)
+							return h - yScale(d) + 12
 						})
-		
-						
-						.attr("fill", "purple")
-						//another way to ignore label
+						.attr("fill", "blue")
+						// another way to ignore label
 						.style("pointer-events", "none")
-
-		
-
-				
-
 
 
 
@@ -134,11 +151,7 @@
 
 			svg.selectAll("rect")
 				.sort(function(a, b){
-						console.log('Before', a, b)
-						o = d3.ascending(a, b)
-						console.log('After', o)
-						return -o
-
+						return d3.ascending(a, b)
 					})
 				.transition("sortBaras")
 				.duration(2000)
