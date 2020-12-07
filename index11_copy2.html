@@ -16,13 +16,11 @@
 
 	<body>
 		<h1> chapter11 </h1>
-		<!-- d3.js -->
 		<script type="text/javascript">
 			// default parameters
 			var w = 600;
 			var h = 250;
 			var dataSet = [];
-
 			// load data from csv file
 				// date format
 			var parseDate = d3.timeParse("%Y/%m") //Y大写对应四个数字的年份
@@ -49,40 +47,35 @@
 					console.log(typeof dataSet[0].date)
 					console.log(typeof dataSet[0].value)
 					
-					//sconsole.table(dataSet, ["date", "value"])//表格形式展示数据
+					//console.table(dataSet, ["date", "value"])//表格形式展示数据
 
-				// scale setup
-				xScale = d3.scaleTime() //这里是scaleTime
-							.domain([d3.min(dataSet, function(d) { return d.date}), 
-									d3.max(dataSet, function(d) { return d.date})])
-							.range([0, w])
+					// scale setup
+					xScale = d3.scaleTime() //这里是scaleTime
+								.domain([d3.min(dataSet, function(d) { return d.date}), 
+										d3.max(dataSet, function(d) { return d.date})])
+								.range([0, w])
 
-				yScale = d3.scaleLinear()
-							.domain([0, d3.max(dataSet, function(d) { return d.value})])
-							.range([h, 0])
+					yScale = d3.scaleLinear()
+								.domain([0, d3.max(dataSet, function(d) { return d.value})])
+								.range([h, 0])
 
-				//  line setup
-				var line = d3.line()
-							.x(function(d) { return xScale(d.date)})
-							.y(function(d) { return yScale(d.value)})
+					//  line setup
+					var line = d3.line()
+								.x(function(d) { return xScale(d.date)})
+								.y(function(d) { return yScale(d.value)})
 
-				// create SVG
-				var svg = d3.select("body")
-							.append("svg")
-							.attr("width", w)
-							.attr("height", h)	
+					// create SVG
+					var svg = d3.select("body")
+								.append("svg")
+								.attr("width", w)
+								.attr("height", h)	
 					// create line
-				svg.append("path")//不是line
-					.datum(dataSet)
-					.attr("class", "line")
-					.attr("id", line) // 这里line没有引号
-
-
-				}) // end of csv then function
+					svg.append("path")//不是line
+						.datum(dataSet)
+						.attr("class", "line")
+						.attr("d", line) // 这里line没有引号，代表var；并且，加入的属性为d，代表path的d属性，URL=https://www.w3schools.com/graphics/svg_path.asp
+				})
 
 		</script>
-
 	</body>
-
-
 </html>
