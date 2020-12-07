@@ -19,7 +19,8 @@
 		<script type="text/javascript">
 			// default parameters
 			var w = 600;
-			var h = 250;
+			var h = 450;
+			var padding = 100;
 			var dataSet = [];
 			// load data from csv file
 				// date format
@@ -53,14 +54,25 @@
 					xScale = d3.scaleTime() //这里是scaleTime
 								.domain([d3.min(dataSet, function(d) { return d.date}), 
 										d3.max(dataSet, function(d) { return d.date})])
-								.range([0, w])
+								.range([padding , w - padding])
 
 					yScale = d3.scaleLinear()
 								.domain([0, d3.max(dataSet, function(d) { return d.value})])
-								.range([h, 0])
+								.range([h - padding, padding])
+								//.range([padding, h - padding])
+
+					// axie setup
+					xAxis = d3.axisBottom()
+							.scale(xScale)
+
+					yAxis = d3.axisLeft()
+							.scale(yScale)
 
 					//  line setup
 					var line = d3.line()
+								.defined(function(d){ //not define; +d
+									return d.value >= 0 //  define -999 or -1 is missing in data file
+								})
 								.x(function(d) { return xScale(d.date)})
 								.y(function(d) { return yScale(d.value)})
 
@@ -74,6 +86,16 @@
 						.datum(dataSet)
 						.attr("class", "line")
 						.attr("d", line) // 这里line没有引号，代表var；并且，加入的属性为d，代表path的d属性，URL=https://www.w3schools.com/graphics/svg_path.asp
+
+					// create axis
+					svg.append("g")
+						.attr("transform", "translate(0," + (h - padding) + ")")
+						.call(xAxis)
+						.attr("class", "axis")
+					svg.append("g")
+						.attr("transform", "translate(" + padding + ",0)")
+						.call(yAxis)
+						.attr("class", "axis")
 				})
 
 		</script>
