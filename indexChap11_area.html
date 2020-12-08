@@ -20,6 +20,13 @@
 				fill: none;
 				stroke: orange;
 			}
+
+			.blowStdArea{
+				fill: gray;
+			}
+			.aboveStdArea{
+				fill: orange;
+			}
 		</style>
 	</head>
 
@@ -27,7 +34,7 @@
 		<h1> chapter11 </h1>
 		<script type="text/javascript">
 			// default parameters
-			var w = 600;
+			var w = 800;
 			var h = 450;
 			var padding = 100;
 			var dataSet = [];
@@ -90,18 +97,20 @@
 					// 			.y(function(d) { return yScale(d.value)})
 
 					// two part line below or above standard line with different color
-					var lineBlow = d3.line()
+					var areaBlow = d3.area()
 								.defined(function(d){ //not define; +d
-									return d.value >= 0 && d.value <=350 //  define -999 or -1 is missing in data file
+									return d.value >= 0 //&& d.value <=350 //  define -999 or -1 is missing in data file
 								})
 								.x(function(d) { return xScale(d.date)})
-								.y(function(d) { return yScale(d.value)})
-					var lineAbove = d3.line()
+								.y0(function(d) { return yScale.range()[0]})
+								.y1(function(d) { return yScale(d.value)})
+					var areaAbove = d3.area()
 								.defined(function(d){ //not define; +d
-									return d.value >= 350//  define -999 or -1 is missing in data file
+									return d.value >350//  define -999 or -1 is missing in data file
 								})
 								.x(function(d) { return xScale(d.date)})
-								.y(function(d) { return yScale(d.value)})
+								.y0(function(d) { return yScale(350)})
+								.y1(function(d) { return yScale(d.value)})
 
 					// create SVG
 					var svg = d3.select("body")
@@ -112,12 +121,12 @@
 					// create line
 					svg.append("path")//不是line
 						.datum(dataSet)
-						.attr("class", "blowStd")
-						.attr("d", lineBlow) // 这里line没有引号，代表var；并且，加入的属性为d，代表path的d属性，URL=https://www.w3schools.com/graphics/svg_path.asp
+						.attr("class", "blowStdArea")
+						.attr("d", areaBlow) // 这里line没有引号，代表var；并且，加入的属性为d，代表path的d属性，URL=https://www.w3schools.com/graphics/svg_path.asp
 					svg.append("path")//不是line
 						.datum(dataSet)
-						.attr("class", "aboveStd")
-						.attr("d", lineAbove)
+						.attr("class", "aboveStdArea")
+						.attr("d", areaAbove)
 
 					// create axis
 					svg.append("g")
@@ -129,15 +138,15 @@
 						.call(yAxis)
 						.attr("class", "axis")
 
-					// // create standard line
-					// svg.append("line")
-					// 	.attr("x1", padding)
-					// 	.attr("y1", yScale(350))
-					// 	.attr("x2", w)
-					// 	.attr("y2", yScale(350))
-					// 	.attr("class", " standard-line") //之前报错 加了line standard-line可以是因为成功继承stroke颜色
-					// 	.style("stroke", "black") // before: attr fill; after: both attr and style combine with stroke
-					// 	.style("stroke-dasharray", "5,15") // 虚线
+					// create standard line
+					svg.append("line")
+						.attr("x1", padding)
+						.attr("y1", yScale(350))
+						.attr("x2", w)
+						.attr("y2", yScale(350))
+						.attr("class", " standard-line") //之前报错 加了line standard-line可以是因为成功继承stroke颜色
+						.style("stroke", "black") // before: attr fill; after: both attr and style combine with stroke
+						.style("stroke-dasharray", "5,15") // 虚线
 
 
 				})
