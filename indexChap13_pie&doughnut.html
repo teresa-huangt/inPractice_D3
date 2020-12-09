@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>D3: Pie layout pie chart</title>
+		<script type="text/javascript" src="./d3.js"></script>
+		<style type="text/css">
+
+			text {
+				font-family: sans-serif;
+				font-size: 12px;
+				fill: white;
+			}
+
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+			var w = 600;
+			var h = 600;
+
+			var dataSet = [5, 10, 20, 45, 6, 25 ];
+
+			var outerRadius = 255;
+			var innerRadius = 100;
+
+			var centerPosX =  w / 2;
+			var centerPosY = h / 2;
+
+			var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+			var pie = d3.pie(); 
+			console.log(pie(dataSet))
+			var arc = d3.arc()
+						.innerRadius(innerRadius)
+						.outerRadius(outerRadius)
+
+			// SVG
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+			
+			console.log(pie(dataSet))
+
+			var arcs = svg.selectAll("g.zheshigeshenmewanyier") // svg. not d3.
+						.data(pie(dataSet))
+						.enter()
+						.append("g")
+						.attr("class", "arcs")
+						.attr("transform", "translate(" + centerPosX + ',' + centerPosY + ")" )
+
+			console.log(pie(dataSet))
+			console.log("arcs is:", arcs)
+
+			arcs.append("path")
+				.attr("fill", function(d, i) {
+					// Compute color based on [i], the index of the elements in [arcs],
+					// the .attr method on newly appended "path" dom has two args, d and i,
+					// d and i are the enumeration of the arcs,
+					// d refers the value,
+					// i refers the index.
+					console.log("Pair of (d, i) is: (", d, ",", i, ")")
+					return color(i)
+				})
+				.attr("d", arc)
+
+			arcs.append("text")
+				.attr("transform", function(d){
+					// Compute translate parametes of [d] to be fitted in [arc] object,
+					// to make sure the pie chart sits on the right position
+					return "translate(" + arc.centroid(d) + ")"
+				})
+				.text(function(d){return d.value})
+
+
+			svg.append("text")
+				.text("auto descending order")
+				.attr("x", centerPosX)
+				.attr("y", centerPosY)
+				.attr("text-anchor", "middle") //一段文字的中心位于之前xy，而不是从xy开始
+				.style("stroke", "teal")
+
+
+		</script>
+	</body>
+</html>
