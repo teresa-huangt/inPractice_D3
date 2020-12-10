@@ -147,8 +147,8 @@
 					xScale.domain(d3.range(dataset.length));
 					yScale.domain([0, d3.max(dataset, function(d) { return d.value; })]);
 
-					console.log('svg.selectAll("rect")');
-					console.log(svg.selectAll("rect"));
+					// console.log('svg.selectAll("rect")');
+					// console.log(svg.selectAll("rect"));
 
 					console.log('svg.selectAll("rect").data(dataset, key)');
 					console.log(svg.selectAll("rect").data(dataset, key));
@@ -157,14 +157,14 @@
 					var bars = svg.selectAll("rect")
 						.data(dataset, key);
 
-					// console.log('bars.enter()');
-					// console.log(bars.enter());
+					console.log('bars.enter()'); //!!!在控制台输入一样的svg.slect...不显示或者bar没定义是因为作用域{}
+					console.log(bars.enter());
 
-					// console.log('bars.enter().append("rect")');
-					// console.log(bars.enter().append("rect"));
+					console.log('bars.enter().append("rect")');
+					console.log(bars.enter().append("rect"));
 
-					// console.log('bars.enter().append("rect").merge(bars)');
-					// console.log(bars.enter().append("rect").merge(bars));
+					console.log('bars.enter().append("rect").merge(bars)');
+					console.log(bars.enter().append("rect").merge(bars));
 
 					//Enter…
 					bars.enter()

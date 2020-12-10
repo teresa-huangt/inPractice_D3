@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>chap13 stackArea</title>
+		<script type="text/javascript" src="./d3.js"></script>
+		<style type="text/css">
+
+			text {
+				font-family: sans-serif;
+				font-size: 12px;
+				fill: white;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1>Monthly unit sales of vehicles in US <br> December 2010&ndash;June 2013; <br> "&ndash" for "-"</h1>
+		<script type="text/javascript">
+			// =============================================================
+			// ================= Setup Parameters ==========================
+			// =============================================================
+			// setup window size
+			var w = 600;
+			var h = 600;
+			var padding = 60;
+
+			// setup color
+			var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+			// setup date
+			var parseTime = d3.timeParse("%Y-%m")
+			var reparseTime = d3.timeFormat("%Y")//？案例用的"%b %Y"
+
+			// setup stack data
+			var stack = d3.stack()
+							.order(d3.stackOrderDescending) //? no keys
+
+			// =============================================================
+			// ====================== Create SVG ===========================
+			// =============================================================
+			// load CSV (要包含在一个{}中 所以之前一些scale还要再这里面setup)
+			var dataSet = [];
+			d3.csv("ev_sales_data.csv")
+				.then(function(d){
+				
+				console.log("length of original csv data")
+				console.log(d.length)
+				console.log("one of original csv data")
+				console.log(d[0])
+
+				console.log("check d[0].Date)")
+				console.log(d[0].Date)
+				console.log(typeof d[0].Date)
+				console.log("check d[0].testValue)")
+				console.log(d[0].testValue)
+
+				console.log("check d[0].test Value)")
+				console.log(d[0]['test Value']) //空格这样读取（d后面.也没了）虽然不报错；但没显示数字而是显示undefined(后面循环读入时能显示数字？)
+
+				console.log("check d[0].Nissan Leaf)")
+				console.log(d[0]['NissanLeaf'])
+				//console.log(typeof d[0]['NissanLeaf'])
+
+				console.log("check d col name")
+				console.log(d.columns)
+				console.log(d.columns[1])
+
+
+
+				
+
+				
+
+				var data = [];
+				for (var i = 0; i < d.length; i++){
+					data[i] = [];
+					data[i].date = parseTime(d[i].Date)
+					data[i].NissanLeaf = + d[i]['Nissan Leaf']//不加+ typeof是string，加了+，typeof是number
+					data[i].SmartED = + d[i]['Smart ED']
+					//data[i].Mitsubishi I EV = + d[i]['Mitsubishi I EV']
+					// data[i].BMW = + d[i]['BMW Active E']
+					// data[i].Ford = + d[i]['Ford Focus']
+					// data[i].Honda = + d[i]['Honda Fit EV']
+					// data[i].Tesla = + d[i]['Tesla Model S']
+					// data[i].Toyota = + d[i]['Toyota RAV4 EV']
+					// data[i].Chevrolet = + d[i]['Chevrolet Spark']
+				}
+				dataSet = data
+				console.log("after loop, check dataSet")
+				console.log(dataSet)
+				console.log("check dataSet.columns")
+				console.log(dataSet.columns) //?列名字出不来NissanLeaf SmartED
+				var newcolName = dataSet.columns;
+				console.log("check newcolName")
+				console.log(newcolName)
+
+
+				console.log("check d")
+				console.log(d)
+				console.log("check d.columns")
+				console.log(d.columns)
+				var colName = d.columns;
+				console.log("check colName")
+				console.log(colName)
+			
+
+				//keys.shift(); 
+
+				
+				// Insteup scale
+				xScale = d3.scaleTime() //这里是scaleTime
+							.domain([d3.min(dataSet, function(d) { return d.date}), 
+									d3.max(dataSet, function(d) { return d.date})])
+							.range([padding , w - padding])
+
+
+				var newcolName2 = ['date', 'NissanLeaf', 'SmartED']
+				
+				yScale = d3.scaleLinear()
+							.domain([0, 
+									d3.max(dataSet, function(d,i) { 
+										// console.log("check d in scale domain max")
+										// console.log(d)
+										var sum = 0
+										for (var i = 1; i < newcolName2.length; i++) {
+											console.log(d[newcolName2[i]])
+											
+											sum += d[newcolName2[i]]
+										}
+										var tempChangeNum = d[newcolName2[1]]+d[newcolName2[2]]
+											console.log("check tempChangeNum")
+											console.log(tempChangeNum)
+										//var tempChangeNum2 += d[newcolName2[i]]
+											console.log("check sum d[newcolName2[i]]")
+											console.log(sum)
+										return sum //原先显示 return d.value 找最大，现在.后面还有9个要相加
+									})
+									])
+							.range([h - padding, padding])
+				console.log("check sum")
+				console.log(sum)
+
+				// yScale = d3.scaleLinear()
+				// 			.domain([0, 10000])	
+				// 			.range([h - padding, padding])	
+
+				// Insetup axis
+				xAxis = d3.axisBottom()
+						   .scale(xScale)
+						   //.ticks(10)
+			    yAxis = d3.axisRight()
+						   .scale(yScale)
+						   //.ticks(5);
+
+			    // Insetup area
+			    area = d3.area()
+			    			.x(function(d) { return xScale(d.data.date); })
+							.y0(function(d) { return yScale(d[0]); })
+							.y1(function(d) { return yScale(d[1]); });
+
+				//Create SVG element
+				var svg = d3.select("body")
+							.append("svg")
+							.attr("width", w)
+							.attr("height", h)
+
+				//Create areas
+				var test = svg.selectAll("path")
+					.data(stack(dataSet))
+					.enter()
+					.append("path")
+					.attr("class", "area")
+					.attr("d", area)
+					.attr("fill", function(d, i) {
+						return d3.schemeCategory20[i];
+					})
+					.append("title")  //Make tooltip
+					.text(function(d) {
+						return test;
+					});
+				})
+
+
+		</script>
+	</body>
+</html>
