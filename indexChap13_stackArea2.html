@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>chap13 stackArea</title>
+		<!-- <script type="text/javascript" src="./d3.js"></script> -->
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+
+		<style type="text/css">
+
+			text {
+				font-family: sans-serif;
+				font-size: 12px;
+				fill: white;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1>Monthly unit sales of vehicles in US <br> December 2010&ndash;June 2013; <br> "&ndash" for "-"</h1>
+		<script type="text/javascript">
+			// =============================================================
+			// ================= Setup Parameters ==========================
+			// =============================================================
+			// setup window size
+			var w = 600;
+			var h = 600;
+			var padding = 60;
+
+			// setup color
+			//var color = d3.scaleOrdinal(d3.schemeCategory10);
+			var color = ["black", "blue","teal"]
+
+			// setup date
+			var parseTime = d3.timeParse("%Y-%m")
+			var reparseTime = d3.timeFormat("%Y")//？案例用的"%b %Y"
+
+			// setup stack data
+			var stack = d3.stack()
+							.keys(["Nissan", "Smart", "Mitsubishi"])
+							//.order(d3.stackOrderDescending) //? no keys
+
+			// =============================================================
+			// ====================== Create SVG ===========================
+			// =============================================================
+			// load CSV (要包含在一个{}中 所以之前一些scale还要再这里面setup)
+			d3.dsv(",", "ev_sales_data.csv", function(d){
+				return{
+					date: new parseTime(d.Date), //加，
+					Nissan: +d['Nissan Leaf'], //[]里面加’‘
+					Smart: +d['Smart ED'],
+					Mitsubishi: +d['Mitsubishi I EV']
+					//Tesla: +d['Tesla Model S']
+
+				}
+
+			}).then(function(dataSet){
+				console.log(dataSet)
+
+				// Insteup scale
+				xScale = d3.scaleTime() //这里是scaleTime
+							.domain([d3.min(dataSet, function(d) { return d.date}), 
+									d3.max(dataSet, function(d) { return d.date})])
+							.range([padding , w - padding])
+
+				var newcolName2 = ['date', 'Nissan', 'Smart', 'Mitsubishi']
+				// console.log("show cols")
+				// console.log(newcolName2)
+
+				yScale = d3.scaleLinear()
+							.domain([0, 
+									d3.max(dataSet, function(d,i) { 
+										var sum = 0
+										for (var j = 1; j < 4; j++) {
+											// console.log("show each value")
+											// console.log(newcolName2[j])
+											// console.log(d)
+											// console.log(d[newcolName2[j]])
+											sum += d[newcolName2[j]]
+										}
+										
+										//console.log("show sum:", sum) //这样备注显示，不要忘记，逗号
+										return sum //原先显示 return d.value 找最大，现在.后面还有9个要相加
+									})
+									])
+							.range([h - padding, padding])
+
+				// Insetup axis
+				xAxis = d3.axisBottom()
+						   .scale(xScale)
+						   //.ticks(10)
+			    yAxis = d3.axisRight()
+						   .scale(yScale)
+						   //.ticks(5);
+
+			   // Insetup area
+			    area = d3.area()
+			    			.x(function(d) { return xScale(d.data.date); })
+							.y0(function(d) { return yScale(d[0]); })
+							.y1(function(d) { return yScale(d[1]); });
+
+				//Create SVG element
+				var svg = d3.select("body")
+							.append("svg")
+							.attr("width", w)
+							.attr("height", h)
+
+				//Create areas
+				console.log("show stack dataSet:", stack(dataSet))
+				console.log('svg.selectAll("rect").data(dataset, key)');
+				//console.log(svg.selectAll("path").data(stack(dataSet)).enter());
+
+				var test = svg.selectAll("path")
+					.data(stack(dataSet))
+					.enter()
+					.append("path")
+					.attr("class", "area")
+					.attr("d", area)
+					.attr("fill", function(d, i) {
+						return color[i];
+					})
+					.append("title")  //Make tooltip
+					.text(function(d) {
+						return test;
+					});
+
+
+
+			})
+
+
+
+				
+
+				
+
+				
+
+				
+				
+
+
+
+				
+
+
+					
+
+				
+
+			    
+				
+
+
+		</script>
+	</body>
+</html>
