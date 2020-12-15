@@ -150,21 +150,21 @@
 					// console.log('svg.selectAll("rect")');
 					// console.log(svg.selectAll("rect"));
 
-					console.log('svg.selectAll("rect").data(dataset, key)');
-					console.log(svg.selectAll("rect").data(dataset, key));
+					// console.log('svg.selectAll("rect").data(dataset, key)');
+					// console.log(svg.selectAll("rect").data(dataset, key));
 
 					//Select…
 					var bars = svg.selectAll("rect")
 						.data(dataset, key);
 
-					console.log('bars.enter()'); //!!!在控制台输入一样的svg.slect...不显示或者bar没定义是因为作用域{}
-					console.log(bars.enter());
+					// console.log('bars.enter()'); //!!!在控制台输入一样的svg.slect...不显示或者bar没定义是因为作用域{}
+					// console.log(bars.enter());
 
-					console.log('bars.enter().append("rect")');
-					console.log(bars.enter().append("rect"));
+					// console.log('bars.enter().append("rect")');
+					// console.log(bars.enter().append("rect"));
 
-					console.log('bars.enter().append("rect").merge(bars)');
-					console.log(bars.enter().append("rect").merge(bars));
+					// console.log('bars.enter().append("rect").merge(bars)');
+					// console.log(bars.enter().append("rect").merge(bars));
 
 					//Enter…
 					bars.enter()
@@ -194,11 +194,11 @@
 							return yScale(d.value);
 						});
 
-					// console.log('bars.exit()');
-					// console.log(bars.exit());
+					console.log('bars.exit()');
+					console.log(bars.exit());
 
-					// console.log('bars.exit().remove()');
-					// console.log(bars.exit().remove());
+					console.log('bars.exit().remove()');
+					console.log(bars.exit().remove());
 
 					//Exit…
 					bars.exit()

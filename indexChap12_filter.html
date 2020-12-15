@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>chp12 filter</title>
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+
+	</head>
+
+	<body>
+		<script type="text/javascript">
+			var dataSet = [5,
+						10,
+						15,
+						20,
+						25	
+			]
+
+			var allP = d3.select("body").selectAll("p")
+						.data(dataSet)
+						.enter()
+						.append("p")
+						.text(function(d) {
+							return "return the value:" + d
+						})
+						// .filter(function(d) {
+						// 	return d > 15
+						// })
+						// .style("color", "teal")
+
+			var selectP = allP.filter(function(d) {
+						return d > 15
+						})
+						.style("color", "teal")
+
+			console.log("check allP:" , allP)
+			console.log("check selectP:" , selectP)
+
+		</script>
+
+	</body>
+</html>
+

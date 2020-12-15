@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title> ch12: change slider to control color filter</title>
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+
+
+	</head>
+	<body>
+		<!-- radios -->
+		<p>
+			<input type="radio" name="filterPreset" value="0" checked="true"> 0
+			<input type="radio" name="filterPreset" value="200"> 200
+			<input type="radio" name="filterPreset" value="500"> 500
+			<input type="radio" name="filterPreset" value="800"> 800
+		</p>
+
+		<script type="text/javascript">
+			// windoe size setup
+			var w = 600
+			var h = 600
+			var padding = 50
+
+			// dataSet setup
+			var dataSet = []
+			var dataSetNum = 200
+			var xMax = 1000
+			var yMax = 1000
+
+			for(var i = 0; i < dataSetNum; i++){
+				var num1 = Math.floor(Math.random() * xMax)
+				var num2 = Math.floor(Math.random() * yMax)
+				// console.log("check num1:", num1)
+				// console.log("check num1:", num2)
+
+				dataSet.push([num1, num2])
+			}
+
+			// scale setup
+			var xScale = d3.scaleLinear()
+							.domain([0, xMax])
+							.range([padding, w - padding])
+							//.paddingInner(0.01)
+
+			var yScale = d3.scaleLinear()
+							.domain([0, yMax])
+							.range([h - padding,padding])
+
+			// axis setup
+			var xAxis = d3.axisBottom()
+							  .scale(xScale)
+							  .ticks(5);
+			var yAxis = d3.axisLeft()
+							  .scale(yScale)
+							  .ticks(5);
+
+			// create SVG
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+
+			//console.log("check dateSet", dataSet)
+			// create circles
+			var circles = svg.selectAll("circle")
+							.data(dataSet)
+							.enter()
+							.append("circle")
+							.attr("cx", function(d, i){
+								// s
+								return xScale(d[0])
+							})	
+							.attr("cy", function(d, i){
+								return yScale(d[1])
+							})
+							.attr("r", 5)
+
+			// create circilr label
+			svg//.append("g")
+					//.attr("id", "label")
+					//.attr("clip-path", "url(#chartMask)")
+					.selectAll("text")
+					.data(dataSet)
+					.enter()
+					.append("text")
+					.text(function(d){
+						return d[0] + "/" + d[1]
+					})
+					.attr("x", function(d){
+						return xScale(d[0]);
+					})
+					.attr("y", function(d){
+						return yScale(d[1]) - 10;
+					})
+					.attr("fill", "teal")
+					.attr("font-size",5)
+			
+
+			//Create X axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(0," + (h - padding) + ")")
+				.call(xAxis);
+			
+			//Create Y axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(" + padding + ",0)")
+				.call(yAxis);
+
+							
+			// modify slider dynamically
+			d3.selectAll("input")
+				.on("click", function(){ //如果默认是radio选200，不会变色，除非点击，所以默认停留0
+
+					console.log("show slider pos value:", d3.select(this).node().value)
+					var threshold = +d3.select(this).node().value
+
+					svg.selectAll("circle")
+						.filter(function(d){
+							return d[0] <= threshold
+						})
+						.attr("fill", "teal")
+				})
+		</script>
+
+	</body>
+</html>
