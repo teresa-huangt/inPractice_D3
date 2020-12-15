@@ -94,10 +94,16 @@
 						   //.ticks(5);
 
 			   // Insetup area
-			    area = d3.area()
-			    			.x(function(d) { return xScale(d.data.date); })
-							.y0(function(d) { return yScale(d[0]); })
-							.y1(function(d) { return yScale(d[1]); });
+			    // area = d3.area()
+			    // 			.x(function(d) { return xScale(d.data.date); })
+							// .y0(function(d) { return yScale(d[0]); })
+							// .y1(function(d) { return yScale(d[1]); });
+				area = d3.area()
+			    			.x(d => xScale(d.data.date))
+							.y0( d =>  yScale(d[0]))
+							.y1(d =>   yScale(d[1])) //缺点是没法再里面用console.log()
+							.curve(d3.curveCatmullRom.alpha(0.5))
+							//.context("looooooooooooook")
 
 				//Create SVG element
 				var svg = d3.select("body")
