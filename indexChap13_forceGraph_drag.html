@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title> chp13: force </title>
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+		<style type="text/css">
+
+		</style>
+
+	</head>
+
+	<body>
+		<script type="text/javascript">
+			// window and other default setup
+			var w = 600
+			var h = 300
+
+			var colors = d3.scaleOrdinal(d3.schemeCategory10)
+
+			//dataset setup
+			var dataSet = {
+				nodes: [
+					{ name: "Adam" },
+					{ name: "Bob" },
+					{ name: "Carrie" },
+					{ name: "Donovan" },
+					{ name: "Edward" },
+					{ name: "Felicity" },
+					{ name: "George" },
+					{ name: "Hannah" },
+					{ name: "Iris" },
+					{ name: "Jerry" }
+				],
+				edges: [
+					{ source: 0, target: 1 },
+					{ source: 0, target: 2 },
+					{ source: 0, target: 3 },
+					{ source: 0, target: 4 },
+					{ source: 1, target: 5 },
+					{ source: 2, target: 5 },
+					{ source: 2, target: 5 },
+					{ source: 3, target: 4 },
+					{ source: 5, target: 8 },
+					{ source: 5, target: 9 },
+					{ source: 6, target: 7 },
+					{ source: 7, target: 8 },
+					{ source: 8, target: 9 }
+				]
+			};
+
+			// force setup
+			var force = d3.forceSimulation(dataSet.nodes)
+							.force("link", d3.forceLink(dataSet.edges).distance(50))
+							.force("charge", d3.forceManyBody().strength(-50))
+							.force("center", d3.forceCenter().x(w / 2).y(h / 2))
+
+			// create SVG
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+
+			// create lines //modify order circle first then line = line not hide 
+			var edges = svg.selectAll("line")
+							.data(dataSet.edges)
+							.enter()
+							.append("line")
+							.style("stroke", function(d, i){ return colors(i)}) //colors调用是（）不是【】
+							.style("stroke-width", 1)
+			
+
+			// create circles
+			var nodes = svg.selectAll("circle")
+							.data(dataSet.nodes)
+							.enter()
+							.append("circle")
+							.attr("r", function(d, i) {return i*3})
+							.style("fill", function(d, i) { return colors(i)})
+							// add dray interaction
+							.call(d3.drag().on("start", dragStart)
+											.on("drag", dragIng)
+											.on("end", dragEnd))
+
+			nodes.append("title")
+				.text(function(d, i) { return d.name}) //check dataSet - nodes - each里面自带
+
+			
+
+			//Every time the simulation "ticks", this will be called
+			force.on("tick", function() {
+
+				edges.attr("x1", function(d) { return d.source.x; })
+					 .attr("y1", function(d) { return d.source.y; })
+					 .attr("x2", function(d) { return d.target.x; })
+					 .attr("y2", function(d) { return d.target.y; })
+			
+				nodes.attr("cx", function(d) { return d.x; })
+					 .attr("cy", function(d) { return d.y; })
+			 })
+
+			// drag function additional //copy and change parameters to feel
+			function dragStart(d){
+				if (!d3.event.active) force.alphaTarget(0.3).restart()
+				//event.on("drag", dragIng).on("end", dragEnd);
+
+				d.fx = d.x
+				d.fy = d.y
+
+			}
+
+			function dragIng(d){
+				d.fx = d3.event.x
+				d.fy = d3.event.y
+				
+			}
+
+			function dragEnd(d){
+				if (!d3.event.active) force.alphaTarget(0)
+				// d.fx = null
+				// d.fy = null
+				
+			}
+
+
+		</script>
+
+	</body>
+</html>
