@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ch14 MAP</title>
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+	</head>
+
+	<body>
+		<script type="text/javascript">
+
+			// window setup
+			var w = 900
+			var h = 600
+
+			// path setup
+			var projection = d3.geoAlbersUsa()
+								.translate([w/2, h/2])
+								.scale(500)
+
+			var path = d3.geoPath(projection)
+						
+
+			// create SVG
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+
+				// load json
+				d3.json("us-states.json")
+					.then(function(jsondata){ //以下运行错误d3.json("us-states.json", function(jsondata){...})
+
+					console.log("check jsondata", jsondata)
+
+					svg.selectAll("path")
+						.data(jsondata.features)
+						.enter()
+						.append("path")
+						.attr("d", path)
+						.style("fill", "teal")
+					}) 
+
+
+				// // ?
+				// d3.json("us-states.json", function(jsondata){
+				// 	console.log("check jsondata", jsondata)
+
+				// 	svg.selectAll("path")
+				// 		.data(jsondata.features)
+				// 		.enter()
+				// 		.append("path")
+				// 		.attr("d", path)
+				// })
+
+				
+		</script>
+
+	</body>
+</html>
