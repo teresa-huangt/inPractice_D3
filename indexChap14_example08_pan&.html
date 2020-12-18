@@ -4,8 +4,25 @@
 		<meta charset="utf-8">
 		<title>ch14 MAP</title>
 		<script src="https://d3js.org/d3.v6.min.js"></script>
-	</head>
+		<style type="text/css">
+			.pan rect{
+				fill: black;
+				opacity: 0.2;
+			}
 
+			.pan text{
+				fill: steelblue;
+				font-size: 25px;
+				text-anchor: middle;
+			}
+
+			.pan:hover rect,
+			.pan:hover text{
+				fill: teal;
+			}
+
+		</style>
+	</head>
 	<body>
 		<script type="text/javascript">
 
@@ -16,7 +33,7 @@
 			// path setup
 			var projection = d3.geoAlbersUsa()
 								.translate([w/2, h/2])
-								.scale(500)
+								.scale(1500)
 
 			var path = d3.geoPath(projection)
 						
@@ -120,11 +137,68 @@
 									return d.place + ": Pop." + formatAsThousands(d.population)
 								})
 
+							// use panButtons function, define blow
+							panButtons()
+
 						})
 
 					}) 
 
 				})
+
+				// define panButtons function
+				var panButtons = function(){
+					// N
+					var north = svg.append("g")
+								.attr("class", "pan")
+								.attr("id", "north")
+
+					north.append("rect")
+							.attr("x", 0)
+							.attr("y", 0)
+							.attr("width", w)
+							.attr("height", h/10)
+					north.append("text")
+							.attr("x", w/2)
+							.attr("y", h/20)
+							.html("&uarr;") //? html+"&"; css style中对应.pan text //代码部分=上箭头
+
+					//interaction
+					d3.selectAll(".pan")
+						.on("click", function(){
+
+							// get current translation offset 
+							var offset = projection.translate() //返回之前设定的translate规则返回的位置，即w h中心
+							// get dirction id
+							var dirction = d3.select(this).attr("id")
+							// set setp distance
+							//var moveStep = (w + h)/4
+							var moveStep = 2
+							
+
+							// do calculation
+							switch (dirction){
+								case "north": //！有冒号
+									offset[1] += moveStep
+									break
+								default: //?
+									break
+							}
+
+							// update offset in SVG
+							projection.translate(offset)
+							console.log("check update offset:", [offset[0], offset[1]])
+
+							svg.selectAll("path")
+								.transition()
+								.attr("d", path) // path里面涉及project的东西
+							svg.selectAll("circle")
+								.transition()
+								.attr("cx", function(d) { return projection([d.lon, d.lat])[0]})
+								.attr("cy", function(d) { return projection([d.lon, d.lat])[1]})
+						})
+
+				}
 				
 
 
