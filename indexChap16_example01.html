@@ -10,14 +10,174 @@
 	</head>
 	<body>
 		<script type="text/javascript">
-			var data = d3.csvParseRows('vehicle_sales_data.csv',(row,i))
-			console.log(data)
+			//* 
+			//* DATASET SETUP
+			//*
 
-        	d3.text('./vehicle_sales_data.csv').then(function (rawData) {
-            console.log(rawData)
-            rows = d3.csvParseRows(rawData)
-            console.log(rows)
-            return 0
+
+			// window size
+			var w = 600
+			var h = 400
+			var padding = 25
+			//For converting strings to Dates
+			var parseTime = d3.timeParse("%Y-%m");
+			//For converting Dates to strings
+			var reparseTime = d3.timeFormat("%Y-%m");
+
+
+
+			//*
+			//* LOAD RAWDATA INTO DREAM DATASET
+			//*
+
+			// var data = d3.csvParseRows('vehicle_sales_data.csv',(row,i))
+			// console.log(data)
+
+			// load data into text format
+        	d3.text('vehicle_sales_data.csv')
+    			.then(function (rawData) {
+            	console.log(rawData)
+        	// load data into a array of arrays
+            	dataMatrix = d3.csvParseRows(rawData)
+           		console.log(dataMatrix)
+
+           		// loop into dream dataSet 
+           		dataSet = []
+
+           		for (var i = 3; i < dataMatrix.length; i++) {
+           			
+           			dataSet[i-3] = {date: parseTime(dataMatrix[i][0])}
+
+           			for(var j = 0; j < dataMatrix[i].length; j++){
+           				
+           				var make 		= dataMatrix[0][j]
+           				var model 		= dataMatrix[1][j]
+           				var makeModel 	= dataMatrix[0][j] + " " + dataMatrix[1][j]
+
+           				var type 		= dataMatrix[2][j] 
+           				var sale 		= dataMatrix[i][j]
+
+           				// missing value
+           				if (sale){
+           					sale = parseInt(sale)
+           				}else{
+           					slae = 0
+           				}
+
+           				// collect above in dataSet
+           				dataSet[i-3][makeModel] = {
+           					"make": make,
+           					"medel": model,
+           					"type": type,
+           					"sale": sale,
+
+           				}
+           			}
+           		}
+           		console.log("check dataSet:", dataSet)
+
+
+
+	           	//*
+				//* STACK DATASET SETUP
+				//*		
+				
+				// get column name, give up date in 1st col 
+				var colKeys = Object.keys(dataSet[0]).slice(1) //Object.key API没搜到但可用
+				console.log("check keys:", colKeys)
+
+				// stack setup
+				var stack = d3.stack()
+								.order(d3.stackOrderDescending)
+
+				// satck add keys attibutes
+				stack.keys(colKeys)
+				//console.log("check stack:", stack.keys(colKeys))// can not see 
+
+				// if value is not specified, 之前联系的stack area keys后面直接就是数字，这里不是
+				stack.value(function(d, key){ return d[key].sale}) //不是d[0][key].sale
+
+				// stack finished
+				var series = stack(dataSet)
+				console.log("check series:", series)
+
+
+
+				//*
+				//* MAKE CHART
+				//*	
+
+				// sale setup
+				xScale = d3.scaleTime()
+							.domain([d3.min(dataSet, function(d){ return d.date}),
+									d3.max(dataSet, function(d) { return d.date})])
+							.range([padding, w-padding])
+				// console.log("check date:", dataSet[0].date)
+				console.log("check xSale:", xScale(dataSet[2].date))
+
+				yScale = d3.scaleLinear()
+							.domain([0,
+									d3.max(dataSet, function(d) {
+										//console.log("check d in yScale:", d)
+										var sum = 0
+										for (var k = 0; k < colKeys.length; k++) {
+											sum += +d[colKeys[k]].sale //+ convert to number
+										}
+										//console.log("check sum:", sum)
+										return sum
+
+									})
+									])
+							.range([padding, h - padding])
+							.nice() //https://github.com/d3/d3-scale/issues/133
+				console.log("check yScale:", yScale(999))
+
+				// axis setup
+				xAxis = d3.axisBottom()
+							.scale(xScale)
+							.ticks(10)
+							.tickFormat(reparseTime)
+
+				yAxis = d3.axisRight()
+							.scale(yScale)
+							.ticks(5)
+
+				// area position
+				area = d3.area()
+							.x(function(d) { return xScale(d.data.date) })
+							.y0(function(d) { return yScale(d[0]) })
+							.y1(function(d) { return yScale(d[1]) })
+
+				// create SVG
+				var svg = d3.select("body")
+							.append("svg")
+							.attr("width", w)
+							.attr("height", h)
+
+				// create area
+				svg.selectAll("path")
+					.data(series)
+					.enter()
+					.append("path")
+					.attr("d", area)
+					.attr("class", "area")
+					.attr("fill", function(d, i){
+						return d3.schemeCategory10[i]
+					})
+					.append("title")
+					.text(function(d){
+						return d.key
+					})
+
+				// create axis
+
+
+           	})
+
+
+
+
+            
 		</script>
 
 	</body>

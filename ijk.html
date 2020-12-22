@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Explain the ijk inside loop</title>
+	</head>
+	<body>
+		<script type="text/javascript">
+			console.log('Starts')
+			console.log('Session I', '--------------------------')
+			for (var i=0; i<5; i++) {
+				console.log('Inside:', i)
+			}
+			console.log('Outside:', i)
+			console.log('The "i" is defined by "var",',
+				'it can be used outside the loop.')
+
+			console.log('Session II', '--------------------------')
+			for (let j=0; j<5; j++) {
+				console.log('Inside:', j)
+			}
+			try {
+				// It can not be operated, since j is not defined
+				console.log('Outside:', j)
+			} catch(err) {
+				console.log(err)
+			}
+			console.log('The "j" is defined by "let",',
+				'it can **NOT** be used outside the loop.')
+
+			console.log('Session III', '--------------------------')
+			var a = 0
+			var a = 1
+			console.log('The variable defined by "var" can be redeclared using "var"')
+
+			console.log('Session IV', '--------------------------')
+			let b = 0
+			// Following 2 rows are both incorrect
+			// let b = 1
+			// var b = 1
+			console.log('The variable defined by "let" can **NOT** be redeclared using "let" or "var"')
+
+			console.log('Session V', '--------------------------')
+			for (let ii=0; ii<5; ii++) {
+				console.log('Out loop:', ii)
+				for (let ii=10; ii<15; ii++) {
+					console.log('Inner loop:', ii)
+				}
+			}
+			console.log('The variable inside a loop declared by "let" can be redeclared inside inner loop.')
+
+			console.log('Session VI', '--------------------------')
+			for (var ii=0; ii<5; ii++) {
+				console.log('Out loop:', ii)
+				for (var ii=10; ii<15; ii++) {
+					console.log('Inner loop:', ii)
+				}
+			}
+			console.log('The variable inside a loop declared by "var" can **NOT** be redeclared inside inner loop.')
+
+		</script>
+	</body>
+</html>
