@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ch16 one whole project</title>
+		<script src="https://d3js.org/d3.v6.min.js"></script>
+		<style type="text/css">
+
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+			//* 
+			//* DATASET SETUP
+			//*
+
+
+			// window size
+			var w = 1200
+			var h = 400
+			var padding = 50
+			//For converting strings to Dates
+			var parseTime = d3.timeParse("%Y-%m");
+			//For converting Dates to strings
+			var reparseTime = d3.timeFormat("%b %Y");
+
+			//Define key function, to be used when binding data
+			var key = function(d) {
+				return d.key;
+			};
+
+
+
+			//*
+			//* LOAD RAWDATA INTO DREAM DATASET
+			//*
+
+			// var data = d3.csvParseRows('vehicle_sales_data.csv',(row,i))
+			// console.log(data)
+
+			// load data into text format
+        	d3.text('vehicle_sales_data.csv')
+    			.then(function (rawData) {
+            	console.log(rawData)
+        	// load data into a array of arrays
+            	dataMatrix = d3.csvParseRows(rawData)
+           		console.log(dataMatrix)
+
+           		// loop into dream dataSet 
+           		dataSet = []
+
+           		for (var i = 3; i < dataMatrix.length; i++) {
+           			
+           			dataSet[i-3] = {date: parseTime(dataMatrix[i][0])}
+
+           			for(var j = 1; j < dataMatrix[i].length; j++){
+           				
+           				var make 		= dataMatrix[0][j]
+           				var model 		= dataMatrix[1][j]
+           				var makeModel 	= dataMatrix[0][j] + " " + dataMatrix[1][j]
+
+           				var type 		= dataMatrix[2][j] 
+           				var sale 		= dataMatrix[i][j]
+
+           				// missing value
+           				if (sale){
+           					sale = parseInt(sale)
+           				}else{
+           					sale = 0
+           				}
+
+           				// collect above in dataSet
+           				dataSet[i-3][makeModel] = {
+           					"make": make,
+           					"medel": model,
+           					"type": type,
+           					"sale": sale,
+
+           				}
+           			}
+           		}
+           		console.log("check dataSet:", dataSet)
+
+           		// loop into type sort dataSet
+           		dataSet4type = []
+
+           		for(var i = 3; i < dataMatrix.length; i++){
+           			dataSet4type[i-3] = {
+           				date: parseTime(dataMatrix[i][0]),
+           				"HEV": 0,
+           				"PHEV": 0,
+           				"BEV": 0,
+           				"FCEV": 0
+           			}
+           			for(var j = 1; j < dataMatrix[i].length; j++){
+           				var type = dataMatrix[2][j]
+           				var sale = dataMatrix[i][j]
+
+           				if (sale){
+           					sale = parseInt(sale)
+           				}else{
+           					sale = 0
+           				}
+
+           				dataSet4type[i-3][type] += sale
+
+           			}
+           		}
+           		console.log("check dataSet4type:", dataSet4type)
+
+
+
+	           	//*
+				//* STACK DATASET SETUP
+				//*		
+				
+				// get column name, give up date in 1st col 
+				var colKeys = Object.keys(dataSet[0]).slice(1) //Object.key API没搜到但可用
+				console.log("check keys:", colKeys)
+
+				// stack setup
+				var stack = d3.stack()
+								//.order(d3.stackOrderDescending)
+
+				// satck add keys attibutes
+				stack.keys(colKeys)
+				//console.log("check stack:", stack.keys(colKeys))// can not see 
+
+				// if value is not specified, 之前联系的stack area keys后面直接就是数字，这里不是
+				stack.value(function(d, key){ return d[key].sale}) //不是d[0][key].sale
+
+				//console.log("check stack order:", stack.order())
+
+				// stack finished
+				var series = stack(dataSet)
+				console.log("check series:", series)
+
+
+
+				//* stack for dataSet4type
+				var colKeys4type = Object.keys(dataSet4type[0]).slice(1) 
+				console.log("check colKeys4type:", colKeys4type)
+				
+				var stack4type = d3.stack()
+
+				stack4type.keys(colKeys4type)
+				//stack4type.value(function(d, key){ return d[key].sale}) //同最简单练习stack area key 后面直接跟sale
+
+				var series4type = stack4type(dataSet4type)
+				console.log("check series4type:", series4type)
+
+
+
+
+
+
+				//*
+				//* MAKE CHART
+				//*	
+
+				// sale setup
+				xScale = d3.scaleTime()
+							.domain([d3.min(dataSet, function(d){ return d.date}),
+									d3.max(dataSet, function(d) { return d.date})])
+							.range([padding, w-padding])
+				// console.log("check date:", dataSet[0].date)
+				console.log("check xSale:", xScale(dataSet[2].date))
+
+				yScale = d3.scaleLinear()
+							.domain([0,
+									d3.max(dataSet, function(d) {
+										//console.log("check d in yScale:", d)
+										var sum = 0
+										for (var k = 0; k < colKeys.length; k++) {
+											sum += +d[colKeys[k]].sale //+ convert to number
+										}
+										//console.log("check sum:", sum)
+										return sum
+
+									})
+									])
+							.range([h - padding, padding])
+							.nice() //https://github.com/d3/d3-scale/issues/133
+				console.log("check yScale:", yScale(999))
+
+				// // color scale
+				// https://observablehq.com/@d3/working-with-color?collection=@d3/d3-color
+				cScale = d3.scaleLinear()
+							.domain([0, dataSet.length/2 ,dataSet.length])
+							.range(["blue", "green","yellow"])
+							.interpolate(d3.interpolateRgb.gamma(1.2))
+				console.log("check color scale:", cScale(99))
+
+				// axis setup
+				xAxis = d3.axisBottom()
+							.scale(xScale)
+							.ticks(10)
+							.tickFormat(reparseTime)
+
+				yAxis = d3.axisRight()
+							.scale(yScale)
+							.ticks(5)
+
+				// area position
+				area = d3.area()
+							.x(function(d) { return xScale(d.data.date) })
+							.y0(function(d) { return yScale(d[0]) })
+							.y1(function(d) { return yScale(d[1]) })
+
+				// create SVG
+				var svg = d3.select("body")
+							.append("svg")
+							.attr("width", w)
+							.attr("height", h)
+
+				// create area (hide; show after eachtype click)
+				svg.append("g")
+					.attr("id", "eachline")
+					// .selectAll("path")
+					// .data(series, key)
+					// .enter()
+					// .append("path")
+					// .attr("d", area)
+					// .attr("class", "area")
+					// .attr("fill", function(d, i){
+					// 	// console.log("check d:", d)
+					// 	// Color 0
+					// 	//return d3.schemePaired[i]
+					// 	//https://observablehq.com/@d3/working-with-color?collection=@d3/d3-color
+					// 	// var t = i/d.length
+					// 	// return  d3.interpolateTurbo(t)
+
+					// 	// Color 1
+					// 	// var thisKey = d.key
+					// 	// var thisType = d[0].data[thisKey].type
+					// 	// var color
+
+					// 	// switch(thisType){
+					// 	// 	case "HEV": color = "#7678A6"; break
+					// 	// 	case "PHEV": color = "#88F2B6"; break
+					// 	// 	case "BEV": color = "#FFE35C" ;break
+					// 	// 	case "FCEV": color = d3.schemePaired[6]; break
+					// 	// }
+					// 	// return color
+
+					// 	// Color 2
+					// 	return cScale(i)
+					// 	console.log("check color:", cScale(i))
+
+					// })
+					// .append("title")
+					// .text(function(d){
+					// 	return d.key
+					// })
+
+				// create area 4 type
+				svg.append("g")
+					.attr("id", "eachtype")
+					.selectAll("path")
+					.data(series4type)
+					.enter()
+					.append("path")
+					.attr("d", area)
+					.attr("class", "area")
+					.attr("fill", function(d){
+						//console.log("check d:", d)
+
+						//console.log("check i:", i)
+						// Color 0
+						//return d3.schemePaired[i]
+
+						// Color 1
+						var thisKey = d.key
+
+						var color
+
+						switch(thisKey){
+							case "HEV": color = "#42468C"; break
+							case "PHEV": color = "#50F296"; break
+							case "BEV": color = "#FFD628"; break
+							case "FCEV": color = "rgb(248, 148, 6)"; break
+						}
+						return color
+
+						//Color 2
+						// return cScale(i)
+						// console.log("check color:", cScale(i))
+
+					})
+					.on("click", function(mouseevent,d){ //与初始例子不同
+						console.log("click")
+						console.log("check d & i:", [mouseevent,d])
+
+						var thisType = d.key
+						console.log("check thisType:", thisType)
+
+						//Generate a new data set with all-zero values, 
+						//except for this type's data
+						var dataSet4select = []
+
+						for (var i = 0; i < dataSet4type.length; i++) {
+							dataSet4select[i] = {
+								date: dataSet4type[i].date,
+								HEV: 0,
+								PHEV: 0,
+								BEV: 0,
+								FCEV: 0,
+								[thisType]: dataSet4type[i][thisType] //? []
+
+
+							}
+						}
+						console.log("check dataSet4type:", dataSet4type)
+						console.log("check dataSet4type one:", dataSet4type[0]["HEV"])
+						console.log("check dataSet4select:", dataSet4select)
+
+						// update stack for new data
+						var series4select = stack4type(dataSet4select)
+
+						// update date to eachtype path
+						var path = d3.selectAll("#eachtype path") //? id+path
+									.data(series4select)
+
+						// update stack area chart
+						var newpath = path.transition().duration(1000).attr("d",area)
+
+						
+						// update new y-axis for dataSet4select
+						yScale.domain([
+								0,
+								d3.max(dataSet4select, function(d) { 
+									var sum = 0
+									sum += d[thisType]
+
+									//console.log("check new sum:", sum)
+									return sum
+
+									})
+								])
+
+						newpath.transition()
+								.delay(50) //无论这里是多大都和axis一起变化
+								.on("start", function() {
+									d3.select("g.axis-y")
+										.transition()
+										.duration(1000)
+										.call(yAxis)
+
+								})
+								.duration(1000)
+								.attr("d", area)
+								// hide eachline area path
+								.transition()
+								.on("start", function(){
+									d3.selectAll("g#eachline path")
+										.attr("opacity",1)
+								})
+								.duration(1000)
+								.attr("opacity", 0)
+
+					// after click show eachline of select type
+
+					})
+					.append("title")
+					.text(function(d){
+						return d.key
+					})
+					
+				
+					
+
+
+				// create axis
+				svg.append("g")
+					.attr("transform", "translate(0," + (h - padding) + ")")
+					.call(xAxis)
+					.attr("class", "axis-x") //? 改变label方向
+
+				svg.append("g")
+					.attr("transform", "translate(" + (w - padding) + ",0)")
+					.call(yAxis)
+					.attr("class", "axis-y") 
+
+
+           	})
+
+
+
+
+            
+		</script>
+
+	</body>
+</html>
