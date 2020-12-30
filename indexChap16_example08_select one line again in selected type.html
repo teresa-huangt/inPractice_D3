@@ -6,6 +6,10 @@
 		<script src="https://d3js.org/d3.v6.min.js"></script>
 		<style type="text/css">
 
+			.area:hover {
+				fill: yellow;
+			}
+
 		</style>
 	</head>
 	<body>
@@ -116,24 +120,24 @@
 				
 				// get column name, give up date in 1st col 
 				var colKeys = Object.keys(dataSet[0]).slice(1) //Object.key API没搜到但可用
-				console.log("check keys:", colKeys)
+				console.log("check colKeys:", colKeys)
 
 				// stack setup
 				var stack = d3.stack()
 								//.order(d3.stackOrderDescending)
 
-				// satck add keys attibutes
-				stack.keys(colKeys)
-				//console.log("check stack:", stack.keys(colKeys))// can not see 
+				// // satck add keys attibutes
+				// stack.keys(colKeys)
+				// //console.log("check stack:", stack.keys(colKeys))// can not see 
 
-				// if value is not specified, 之前联系的stack area keys后面直接就是数字，这里不是
-				stack.value(function(d, key){ return d[key].sale}) //不是d[0][key].sale
+				// // if value is not specified, 之前联系的stack area keys后面直接就是数字，这里不是
+				// stack.value(function(d, key){ return d[key].sale}) //不是d[0][key].sale
 
-				//console.log("check stack order:", stack.order())
+				// //console.log("check stack order:", stack.order())
 
-				// stack finished
-				var series = stack(dataSet)
-				console.log("check series:", series)
+				// // stack finished
+				// var series = stack(dataSet)
+				// console.log("check series:", series)
 
 
 
@@ -213,46 +217,10 @@
 							.attr("width", w)
 							.attr("height", h)
 
-				// create area
+				// create area (hide; show after eachtype click)
 				svg.append("g")
 					.attr("id", "eachline")
-					.selectAll("path")
-					.data(series, key)
-					.enter()
-					.append("path")
-					.attr("d", area)
-					//.attr("opacity",0) //hide each line plot
-					.attr("class", "area")
-					.attr("fill", function(d, i){
-						// console.log("check d:", d)
-						// Color 0
-						//return d3.schemePaired[i]
-						//https://observablehq.com/@d3/working-with-color?collection=@d3/d3-color
-						// var t = i/d.length
-						// return  d3.interpolateTurbo(t)
 
-						// Color 1
-						// var thisKey = d.key
-						// var thisType = d[0].data[thisKey].type
-						// var color
-
-						// switch(thisType){
-						// 	case "HEV": color = "#7678A6"; break
-						// 	case "PHEV": color = "#88F2B6"; break
-						// 	case "BEV": color = "#FFE35C" ;break
-						// 	case "FCEV": color = d3.schemePaired[6]; break
-						// }
-						// return color
-
-						// Color 2
-						return cScale(i)
-						console.log("check color:", cScale(i))
-
-					})
-					.append("title")
-					.text(function(d){
-						return d.key
-					})
 
 				// create area 4 type
 				svg.append("g")
@@ -263,6 +231,7 @@
 					.append("path")
 					.attr("d", area)
 					.attr("class", "area")
+					//.attr("opacity", 1)
 					.attr("fill", function(d){
 						//console.log("check d:", d)
 
@@ -288,6 +257,9 @@
 						// console.log("check color:", cScale(i))
 
 					})
+
+
+					//*
 					.on("click", function(mouseevent,d){ //与初始例子不同
 						console.log("click")
 						console.log("check d & i:", [mouseevent,d])
@@ -338,10 +310,9 @@
 
 									})
 								])
-						// 在现有y坐标下画选中的type 根据line325
-						// 以下code对应停留5s；再开始下面变化坐标同时同步（duration相同的情况下）重画选中type根据现有坐标
+				//在这之前，选中type会在现有坐标画出(line329)，然后再delay，再变化坐标变化重画选中type
 						newpath.transition()
-								.delay(4000) 
+								.delay(1000) 
 								.on("start", function() {
 									d3.select("g.axis-y")
 										.transition()
@@ -349,15 +320,163 @@
 										.call(yAxis)
 
 								})
-								.duration(2000)
+								.duration(1000)
 								.attr("d", area)
+								//.remove()
+
+								// hide unselected type；发生在上面delay之前；和在现有坐标画选中type同时
+								.transition()
+								.on("start", function(){
+										d3.selectAll("g#eachline path")
+											.attr("opacity",1)
+									})
+								.duration(100)
+								.remove() //！！！与案例不同，测试发现总是tooltip之前选中的1/4type，被盖住
+								//.attr("opacity", 0)
+								
+
+
+					// after click show eachline of select type
+					var keysofThisType = []
+					for (var i = 0; i < colKeys.length; i++) {
+						if(dataSet[0][colKeys[i]].type == thisType){
+							keysofThisType.push(colKeys[i])
+						}
+					}
+					console.log("check keysofThisType:", keysofThisType)
+
+					stack.keys(keysofThisType)
+						.value(function (d, key){ return d[key].sale}) //?value(d,key)
+
+					var series = stack(dataSet)
+					console.log("check series:", series)
+
+
+					//*
+					var showEachinSelectedType = 
+					svg.select("g#eachline") //这里是eachline而不是eachtype
+						.selectAll("path")
+						.data(series, key)
+						.enter()
+						.append("path")
+						.attr("class", "area")
+						.attr("opacity", 0)//新生成的eachline先隐藏，然后随着更新坐标轴和重画后再调整opacity出现line357
+						.attr("d", area)
+						.attr("fill", function(d,i) {
+							var thisKey = d.key
+							var thisType = d[0].data[thisKey].type
+							
+
+							// make gradual change according to keysofThisType change
+							var spread = 0.3
+							var startPoint 
+
+							switch(thisType){
+								case "HEV": startPoint = 0.1; break
+								case "PHEV": startPoint = 0.5; break
+								case "BEV": startPoint = 0.7 ;break
+								case "FCEV": startPoint = 0.8; break
+							}
+
+							var totalKeys = keysofThisType.length
+							var normalized = startPoint + (i/totalKeys) * spread
+							//console.log("check normalized:", normalized)
+
+							return d3.interpolateCool(normalized)
+							
+						})
+
+						
+
+						// select one line again in selected type
+						.on("click", function(mouseevent,d){
+							console.log("check d in click again:", d)
+							
+							var thisType = d.key
+							
+							d3.selectAll("g#eachline path")
+								.filter(function(d){
+									if (d.key !== thisType){
+										return true
+									}
+								})
+								.transition()
+								.duration(1000)
+								.attr("opacity", 0) //注意这里消失未选中的过程与之前没特意设定不同
+
+							var stackAgain = d3.area()
+												.x(function(d){ 
+													//console.log(d) 
+													return xScale(d.data.date)
+												})
+												.y0(function(d){ 
+													return yScale(0)
+												})
+												.y1(function(d){ 
+													return yScale(d.data[thisType].sale)
+												})
+
+							var selectEachinSelectedType= 
+							d3.select(this)
+								.transition()
+								.delay(1000)
+								.duration(1000)
+								.attr("d", stackAgain)
+
+							yScale.domain ([ //更新yScale部分 domain() 不是domain = （）
+									0,
+									d3.max(dataSet, function(d){
+										console.log(d)
+										return d[thisType].sale})
+									])
+
+							selectEachinSelectedType
+								.transition()
+								.duration(1000)
+								.attr("d", stackAgain)
+								.on("start", function() {
+									d3.select("g.axis-y")
+										.transition()
+										.duration(1000)
+										.call(yAxis)
+								})
+
+
+
+						})
+
+
+						// tooltip of all eachline in selected one type
+						.append("title")
+						.text(function(d){
+							//console.log("check d.key:", d.key)
+							return d.key//.slice(-1)
+						})
+
+
+						// showEachinSelectedType
+						// .transition()
+						// 		.delay(2000) 
+						// 		.on("start", function() {
+						// 			d3.select("g.axis-y")
+						// 				.transition()
+						// 				.duration(1000)
+						// 				.call(yAxis)
+
+						// 		})
+						// 		.duration(1000)
+						// 		.attr("d", area)
+
+
 
 
 					})
 					.append("title")
 					.text(function(d){
+						//console.log("check d:", d)
 						return d.key
 					})
+
 					
 				
 					

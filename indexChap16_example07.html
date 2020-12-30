@@ -6,6 +6,10 @@
 		<script src="https://d3js.org/d3.v6.min.js"></script>
 		<style type="text/css">
 
+			.area:hover {
+				fill: yellow;
+			}
+
 		</style>
 	</head>
 	<body>
@@ -116,7 +120,7 @@
 				
 				// get column name, give up date in 1st col 
 				var colKeys = Object.keys(dataSet[0]).slice(1) //Object.key API没搜到但可用
-				console.log("check keys:", colKeys)
+				console.log("check colKeys:", colKeys)
 
 				// stack setup
 				var stack = d3.stack()
@@ -337,9 +341,10 @@
 
 									})
 								])
-
+						// 在现有y坐标下画选中的type 根据line325
+						// 以下code对应停留4s；再开始下面变化坐标同时同步（duration相同的情况下）重画选中type根据现有坐标
 						newpath.transition()
-								.delay(50) //无论这里是多大都和axis一起变化
+								.delay(4000) 
 								.on("start", function() {
 									d3.select("g.axis-y")
 										.transition()
@@ -349,7 +354,7 @@
 								})
 								.duration(1000)
 								.attr("d", area)
-								// hide eachline area path
+								// 停留之后，随y轴改变新画area，完成后在让eachline显示，type的大area隐藏
 								.transition()
 								.on("start", function(){
 									d3.selectAll("g#eachline path")
@@ -359,6 +364,65 @@
 								.attr("opacity", 0)
 
 					// after click show eachline of select type
+					var keysofThisType = []
+					for (var i = 0; i < colKeys.length; i++) {
+						if(dataSet[0][colKeys[i]].type == thisType){
+							keysofThisType.push(colKeys[i])
+						}
+					}
+					console.log("check keysofThisType:", keysofThisType)
+
+					stack.keys(keysofThisType)
+						.value(function (d, key){ return d[key].sale})
+
+					var series = stack(dataSet)
+					console.log("check series:", series)
+
+					var showEachinSelectedType = svg.select("g#eachline") //这里是eachline而不是eachtype
+						.selectAll("path")
+						.data(series, key)
+						.enter()
+						.append("path")
+						.attr("class", "area")
+						// .transition()
+						// .delay(500)
+						.attr("opacity", 0) ////新生成的eachline先隐藏，
+						.attr("d", area)
+						.attr("fill", function(d,i) {
+							var thisKey = d.key
+							var thisType = d[0].data[thisKey].type
+							
+
+							// make gradual change according to keysofThisType change
+							var spread = 0.3
+							var startPoint 
+
+							switch(thisType){
+								case "HEV": startPoint = 0.1; break
+								case "PHEV": startPoint = 0.5; break
+								case "BEV": startPoint = 0.7 ;break
+								case "FCEV": startPoint = 0.8; break
+							}
+
+							var totalKeys = keysofThisType.length
+							var normalized = startPoint + (i/totalKeys) * spread
+							console.log("check normalized:", normalized)
+
+							return d3.interpolateCool(normalized)
+							
+						})
+						//.attr("opacity", 0.1)
+						.append("title")
+						.text(function(d){
+							return d.key
+						})
+						// showEachinSelectedType.transition()
+						// 					.on("start", function(){
+						// 						d3.selectAll("g#eachline path")
+						// 						.attr("opacity",1)
+						// 				})
+						// 				.duration(1000)
+						// 				.attr("opacity", 0)
 
 					})
 					.append("title")
