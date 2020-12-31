@@ -13,6 +13,14 @@
 		</style>
 	</head>
 	<body>
+		<div id = "container">
+			<h1> Electric Vehicles Sales</h1>
+			<p> Explanatory information... Context information</p>
+			<div id = "chart-container"> ... </div>
+			<div id = "footer"> ...</div>
+
+		</div>
+
 		<script type="text/javascript">
 			//* 
 			//* DATASET SETUP
@@ -212,7 +220,7 @@
 							.y1(function(d) { return yScale(d[1]) })
 
 				// create SVG
-				var svg = d3.select("body")
+				var svg = d3.select("#chart-container")
 							.append("svg")
 							.attr("width", w)
 							.attr("height", h)
