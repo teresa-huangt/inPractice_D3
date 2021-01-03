@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>ch16 one whole project</title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<style type="text/css">
+
+		.area:hover {
+			fill: yellow;
+		}
+		#chart-legend {
+			display: flex;
+			justify-content: start;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+
+		#backButton {
+			cursor: pointer;
+		}
+
+		#backButton rect {
+			fill: #ccc;
+		}
+
+		#backButton text {
+			font-family: Helvetica, sans-serif;
+			font-weight: bold;
+			font-size: 14px;
+			fill: black;
+		}
+		#backButton:hover rect {
+			fill: red;
+		}
+
+	</style>
+</head>
+<body>
+	<h1>Four types; click to select one type, n lines in each one type; click again, show one line in one selected type  </h1>
+	<div>
+		<h2 id='chart-title'></h2>
+		<svg id='chart-svg'></svg>
+		<div id='chart-legend'></div>
+	</div>
+
+	<script type="text/javascript">
+		console.log('Components')
+		function select(rows, typeName, makeName) {
+			console.log('Selecting', typeName, 'in', rows)
+			let selected = []
+
+			for(let i = 3; i < rows.length; i++){
+				let entry = {
+					date: parseTime(rows[i][0]),
+				}
+
+				for(let j = 1; j < rows[i].length; j++){
+					let type = rows[2][j]
+					let make = rows[0][j]
+					let sale = rows[i][j]
+
+					if (sale){
+						sale = parseInt(sale)
+					}else{
+						sale = 0
+					}
+
+					// Select columns by typeName and makeName
+					if (typeName === '*') {
+						// Level 1: Select all typeName
+						if (!(type in entry)) {
+							entry[type] = 0
+						}
+						entry[type] += sale
+					} else {
+						// Level 1: Select certain typeName
+						if (type != typeName) {
+							continue
+						}
+						if (makeName === '*') {
+							// Level 2: Select all makeName
+							if (!(make in entry)) {
+								entry[make] = 0
+							}
+							entry[make] += sale
+						} else {
+							// Level 2: Select certain typeName
+							if (make != makeName) {
+								continue
+							}
+							if (!(make in entry)) {
+								entry[make] = 0
+							}
+							entry[make] += sale
+						}
+					}
+				}
+
+				selected.push(entry)
+			}
+			return selected
+		}
+
+		function plot(rawRows, typeName, makeName) {
+			while (groups.length > 0) {
+				groups.pop().remove()
+			}
+			let grp = svg.append('g')
+
+			// ----------------------------------
+			let selected = select(rawRows, typeName, makeName)
+			console.log('selected is', selected)
+			let xScale = d3.scaleTime()
+			.domain([d3.min(selected, function(d){ return d.date}),
+				d3.max(selected, function(d) { return d.date})])
+			.range([padding, w-padding])
+
+			// ----------------------------------
+			let colKeys = []
+			for (var c in selected[0]) {
+				if (c != 'date') {
+					colKeys.push(c)
+				}
+			}
+			
+			console.log('colKeys is', colKeys)
+			let stack = d3.stack()
+			stack.keys(colKeys)
+			let stacked = stack(selected)
+			console.log('stacked is', stacked)
+
+			let yScale = d3.scaleLinear()
+			.domain([0, d3.max(stacked, (d) => d3.max(d, (d) => d[1]))])
+			.range([h - padding, padding])
+			.nice()
+
+			// ----------------------------------
+			// axis setup
+			let xAxis = d3.axisBottom()
+			.scale(xScale)
+			.ticks(10)
+			.tickFormat(reparseTime)
+
+			let yAxis = d3.axisRight()
+			.scale(yScale)
+			.ticks(5)
+
+			// area position
+			let area0 = d3.area()
+			.x(function(d) { return xScale(d.data.date) })
+			.y0(function(d) { return h - padding })
+			.y1(function(d) { return h - padding })
+
+			let area = d3.area()
+			.x(function(d) { return xScale(d.data.date) })
+			.y0(function(d) { return yScale(d[0]) })
+			.y1(function(d) { return yScale(d[1]) })
+
+			cScale = d3.scaleLinear()
+							.domain([0, stacked.length])
+							.range(["blue", "red"])
+							.interpolate(d3.interpolateRgb.gamma(1.2))
+
+			// ----------------------------------
+			grp
+			.selectAll("path")
+			.data(stacked)
+			.enter()
+			.append("path")
+			.attr("d", area0)
+			.attr("class", "area")
+			.attr("fill", function(d, i){
+				let c = cScale(i)
+				console.log('Plotting', d.key, 'as', c)
+				return c
+			})
+			.on("click", function(event, d) {
+				if (filters.length == 1) {
+					plot(rawRows, d.key, '*')
+					return 0
+				}
+				if (filters.length == 2) {
+					let tmp = filters[filters.length - 1]
+					plot(rawRows, tmp[0], d.key)
+					return 0
+				}
+			})
+			.on('mouseover', function(event, d) {
+				console.log('Mouse is hovering', d.key)
+			})
+			.transition()
+			.delay(100)
+			.duration(1000)
+			.attr("d", area)
+
+			let tmp = document.getElementById('chart-legend').children
+			for (let i=0; i< tmp.length;) {
+				tmp[0].remove()
+			}
+
+			d3.select('#chart-legend')
+			.selectAll('p')
+			.data(colKeys)
+			.enter()
+			.append('p')
+			.html((d) => d)
+			.attr('style', (d, i) => ('color: ' +cScale(i)))
+			.on("click", function(event, d) {
+				if (filters.length == 1) {
+					plot(rawRows, d, '*')
+					return 0
+				}
+				if (filters.length == 2) {
+					let tmp = filters[filters.length - 1]
+					plot(rawRows, tmp[0], d)
+					return 0
+				}
+			})
+
+			if (filters.length > 0) {
+				grp.append('text')
+				.attr('x', padding)
+				.attr('y', padding)
+				.attr('stroke', 'black')
+				.html('Back')
+				.on('click', function(event) {
+					filters.pop()
+					let tmp = filters.pop()
+					plot(rawRows, tmp[0], tmp[1])
+				})
+			}
+
+			groups.push(grp)
+			filters.push([typeName, makeName])
+			console.log('filters is', filters)
+			d3.select('#chart-title').html('Filter is ' + typeName + ' ' + makeName)
+			// for (var i = 0; i < groups.length-1; i++) {
+			// 	groups[i].attr('display', 'none')
+			// }
+			
+			return grp
+		}
+	</script>
+
+	<script type="text/javascript">
+		// Parameters -------------------
+		// window size
+		let w = 1200
+		let h = 400
+		let padding = 50
+
+		// create SVG
+		let svg = d3.select("#chart-svg")
+		.attr("width", w)
+		.attr("height", h)
+
+		//For converting strings to Dates
+		let parseTime = d3.timeParse("%Y-%m")
+
+		//For converting Dates to strings
+		let reparseTime = d3.timeFormat("%b %Y")
+
+		let groups = []
+		let filters = []
+
+		d3.text('vehicle_sales_data.csv')
+		.then(function (rawData) {
+			// ----------------------------------
+			let rawRows = d3.csvParseRows(rawData)
+			console.log(rawRows)
+			plot(rawRows, '*', '*')
+		})
+	</script>
+
+	<script type="text/javascript">
+		
+	</script>
+</body>
+</html>
