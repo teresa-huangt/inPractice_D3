@@ -33,7 +33,142 @@
 	<body>
 		<h1>Four types; click to select one type, n lines in each one type; click again, show one line in one selected type  </h1>
 		<script type="text/javascript">
-			
+			// Parameters --------------------
+			// window size
+			var w = 1200
+			var h = 400
+			var padding = 50
+
+			//For converting strings to Dates
+			var parseTime = d3.timeParse("%Y-%m");
+			//For converting Dates to strings
+			var reparseTime = d3.timeFormat("%b %Y");
+
+			//Define key function, to be used when binding data
+			var key = function(d) {
+				return d.key;
+			}
+
+			function parseRawData(rawData) {
+				// console.log(rawData);
+				let dataMatrix = d3.csvParseRows(rawData)
+				// console.log(dataMatrix);
+				// let make = dataMatrix[0];
+				// let model = dataMatrix[1];
+				// let type = dataMatrix[2];
+				// console.log(make, model, type);
+				dataSet = []
+
+           		for (var i = 3; i < dataMatrix.length; i++) {
+           			
+           			dataSet[i-3] = {date: parseTime(dataMatrix[i][0])}
+
+           			for(var j = 1; j < dataMatrix[i].length; j++){
+           				
+           				var make 		= dataMatrix[0][j]
+           				var model 		= dataMatrix[1][j]
+           				var makeModel 	= dataMatrix[0][j] + " " + dataMatrix[1][j]
+
+           				var type 		= dataMatrix[2][j] 
+           				var sale 		= dataMatrix[i][j]
+
+           				// missing value
+           				if (sale){
+           					sale = parseInt(sale)
+           				}else{
+           					sale = 0
+           				}
+
+           				// collect above in dataSet
+           				dataSet[i-3][makeModel] = {
+           					"make": make,
+           					"medel": model,
+           					"type": type,
+           					"sale": +sale,
+
+           				}
+           			}
+           		}
+           		// console.log("check dataSet:", dataSet)
+           		return dataSet;
+			}
+
+
+
+			d3.text('vehicle_sales_data.csv')
+    			.then(function (rawData) {
+    				let data = parseRawData(rawData);
+    				console.log(data);
+    				let stack = d3.stack()
+    				var colKeys = [ "HEV", "PHEV", "BEV", "FCEV" ]
+    				stack.keys(colKeys);
+    				let stacked = stack(data)
+    				console.log(stacked)
+
+
+    				// sale setup
+					xScale = d3.scaleTime()
+								.domain([d3.min(data, function(d){ return d.date}),
+										d3.max(data, function(d) { return d.date})])
+								.range([padding, w-padding])
+					// console.log("check date:", dataSet[0].date)
+					//console.log("check xSale:", xScale(dataSet[2].date))
+
+					yScale = d3.scaleLinear()
+								.domain([0, 100])
+								.range([h - padding, padding])
+								.nice() //https://github.com/d3/d3-scale/issues/133
+
+    				// axis setup
+					xAxis = d3.axisBottom()
+								.scale(xScale)
+								.ticks(10)
+								.tickFormat(reparseTime)
+
+					yAxis = d3.axisRight()
+								.scale(yScale)
+								.ticks(5)
+
+					// area position
+					area = d3.area()
+								.x(function(d) { return xScale(d.data.date) })
+								.y0(function(d) { return yScale(d[0]) })
+								.y1(function(d) { return yScale(d[1]) })
+
+					let svg = d3.select('body').append('svg')
+    				svg.append("g")
+					.attr("id", "eachtype")
+					.selectAll("path")
+					.data(stacked)
+					.enter()
+					.append("path")
+					.attr("d", area)
+					.attr("class", "area")
+
+					.attr("fill", function(d){
+
+						var thisKey = d.key
+
+						var color
+
+						switch(thisKey){
+							case "HEV": color = "#42468C"; break
+							case "PHEV": color = "#50F296"; break
+							case "BEV": color = "#FFD628"; break
+							case "FCEV": color = "rgb(248, 148, 6)"; break
+						}
+						return color
+
+					})
+    			})
+
+		</script>
+
+
+
+
+		<script type="text/javascript">
+			// stophere
 			//* 
 			//* DATASET SETUP
 			//*
@@ -86,7 +221,7 @@
             	//console.log(rawData)
         	// load data into a array of arrays
             	dataMatrix = d3.csvParseRows(rawData)
-           		//console.log(dataMatrix)
+           		console.log(dataMatrix)
 
            		// loop into dream dataSet 
            		dataSet = []
@@ -121,7 +256,7 @@
            				}
            			}
            		}
-           		//console.log("check dataSet:", dataSet)
+           		console.log("check dataSet:", dataSet)
 
            		// loop into type sort dataSet
            		dataSet4type = []
@@ -148,7 +283,7 @@
 
            			}
            		}
-           		//console.log("check dataSet4type:", dataSet4type)
+           		console.log("check dataSet4type:", dataSet4type)
 
 
 
@@ -176,7 +311,8 @@
 
 				// stack finished
 				var series = stack(dataSet)
-				//console.log("check series:", series)
+				console.log("check series:", series, dataSet)
+				stophere
 
 
 
@@ -564,8 +700,9 @@
 
 
 							// re-update data and transition and remove(?)
-							var show1type = d3.appen("g").selectAll("g#eachtype path")
-												.data(series4type, key)
+							var show1type = d3.select("g#eachtype")
+							console.log(show1type)
+							show1type.data(series4type, key)
 												.enter() //+
 												//.append("path")//+
 												.transition()
